@@ -7,6 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
 import { mockFeeInvoices, mockLearners } from '@/data/mock-data';
+import { useFinance } from '@/store';
+import { InvoiceForm } from '@/components/forms/InvoiceForm';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { 
   CreditCard, 
@@ -22,16 +24,58 @@ import {
   Clock,
   DollarSign,
   Users,
-  Calendar
+  Calendar,
+  Edit,
+  Trash2
 } from 'lucide-react';
 
 export function Finance() {
   const [activeTab, setActiveTab] = useState('overview');
   const [mpesaPhone, setMpesaPhone] = useState('');
+  const [showInvoiceForm, setShowInvoiceForm] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [invoiceToDelete, setInvoiceToDelete] = useState<any>(null);
+  
+  const { invoices, addInvoice, updateInvoice, deleteInvoice } = useFinance();
+  
+  // Use mock data initially, but allow for real CRUD operations
+  const allInvoices = invoices.length > 0 ? invoices : mockFeeInvoices;
 
-  const totalFees = mockFeeInvoices.reduce((sum, invoice) => sum + invoice.total, 0);
-  const totalPaid = mockFeeInvoices.reduce((sum, invoice) => sum + (invoice.total - invoice.balance), 0);
-  const totalBalance = mockFeeInvoices.reduce((sum, invoice) => sum + invoice.balance, 0);
+  const totalFees = allInvoices.reduce((sum, invoice) => sum + invoice.total, 0);
+  const totalPaid = allInvoices.reduce((sum, invoice) => sum + (invoice.total - invoice.balance), 0);
+  const totalBalance = allInvoices.reduce((sum, invoice) => sum + invoice.balance, 0);
+
+  const handleAddInvoice = () => {
+    setSelectedInvoice(null);
+    setShowInvoiceForm(true);
+  };
+
+  const handleEditInvoice = (invoice: any) => {
+    setSelectedInvoice(invoice);
+    setShowInvoiceForm(true);
+  };
+
+  const handleSaveInvoice = (invoiceData: any) => {
+    if (selectedInvoice) {
+      updateInvoice(selectedInvoice.id, invoiceData);
+    } else {
+      addInvoice(invoiceData);
+    }
+  };
+
+  const handleDeleteInvoice = (invoice: any) => {
+    setInvoiceToDelete(invoice);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDelete = () => {
+    if (invoiceToDelete) {
+      deleteInvoice(invoiceToDelete.id);
+      setShowDeleteDialog(false);
+      setInvoiceToDelete(null);
+    }
+  };
 
   const InvoiceCard = ({ invoice }: { invoice: any }) => {
     const student = mockLearners.find(s => s.id === invoice.learner_id);
@@ -73,7 +117,7 @@ export function Finance() {
                 {isPaid ? 'Paid' : paymentStatus}
               </Badge>
               
-              <div className="flex space-x-2">
+              <div className="flex items-center space-x-2">
                 <Dialog>
                   <DialogTrigger asChild>
                     <Button variant="outline" size="sm">
@@ -89,6 +133,16 @@ export function Finance() {
                   </DialogContent>
                 </Dialog>
                 
+                <Button variant="outline" size="sm" onClick={() => handleEditInvoice(invoice)}>
+                  <Edit className="h-4 w-4 mr-1" />
+                  Edit
+                </Button>
+
+                <Button variant="outline" size="sm" onClick={() => handleDeleteInvoice(invoice)}>
+                  <Trash2 className="h-4 w-4 mr-1" />
+                  Delete
+                </Button>
+
                 {!isPaid && (
                   <Dialog>
                     <DialogTrigger asChild>
@@ -299,7 +353,7 @@ export function Finance() {
           <Badge variant="secondary" className="bg-green-50 text-green-700">
             M-PESA Integrated
           </Badge>
-          <Button>
+          <Button onClick={handleAddInvoice}>
             <Plus className="h-4 w-4 mr-2" />
             Create Invoice
           </Button>
@@ -362,7 +416,7 @@ export function Finance() {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="invoices">Invoices ({mockFeeInvoices.length})</TabsTrigger>
+          <TabsTrigger value="invoices">Invoices ({allInvoices.length})</TabsTrigger>
           <TabsTrigger value="payments">M-PESA Payments</TabsTrigger>
           <TabsTrigger value="reports">Reports</TabsTrigger>
         </TabsList>
@@ -440,7 +494,7 @@ export function Finance() {
         </TabsContent>
 
         <TabsContent value="invoices" className="space-y-4">
-          {mockFeeInvoices.map((invoice) => (
+          {allInvoices.map((invoice) => (
             <InvoiceCard key={invoice.id} invoice={invoice} />
           ))}
         </TabsContent>
@@ -584,6 +638,38 @@ export function Finance() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Invoice Form Dialog */}
+      <Dialog open={showInvoiceForm} onOpenChange={setShowInvoiceForm}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <InvoiceForm
+            invoice={selectedInvoice}
+            onClose={() => setShowInvoiceForm(false)}
+            onSave={handleSaveInvoice}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Invoice</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p>Are you sure you want to delete this invoice?</p>
+            <p className="text-sm text-gray-600">This action cannot be undone.</p>
+            <div className="flex space-x-2">
+              <Button variant="destructive" onClick={confirmDelete}>
+                Delete Invoice
+              </Button>
+              <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

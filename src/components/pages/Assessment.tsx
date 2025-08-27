@@ -6,6 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
 import { mockSBATasks, mockAssessmentEvidence, mockOutcomeMaps, mockSubjects, mockClassrooms } from '@/data/mock-data';
+import { useAssessment } from '@/store';
+import { TaskForm } from '@/components/forms/TaskForm';
 import { formatDate } from '@/lib/utils';
 import { 
   BookOpen, 
@@ -24,11 +26,21 @@ import {
   AlertTriangle,
   TrendingUp,
   Users,
-  Award
+  Award,
+  Trash2
 } from 'lucide-react';
 
 export function Assessment() {
   const [activeTab, setActiveTab] = useState('tasks');
+  const [showTaskForm, setShowTaskForm] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<any>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState<any>(null);
+  
+  const { tasks, addTask, updateTask, deleteTask } = useAssessment();
+  
+  // Use mock data initially, but allow for real CRUD operations
+  const allTasks = tasks.length > 0 ? tasks : mockSBATasks;
 
   const getSubject = (subjectId: string) => {
     return mockSubjects.find(s => s.id === subjectId);
@@ -36,6 +48,37 @@ export function Assessment() {
 
   const getClassroom = (classroomId: string) => {
     return mockClassrooms.find(c => c.id === classroomId);
+  };
+
+  const handleAddTask = () => {
+    setSelectedTask(null);
+    setShowTaskForm(true);
+  };
+
+  const handleEditTask = (task: any) => {
+    setSelectedTask(task);
+    setShowTaskForm(true);
+  };
+
+  const handleSaveTask = (taskData: any) => {
+    if (selectedTask) {
+      updateTask(selectedTask.id, taskData);
+    } else {
+      addTask(taskData);
+    }
+  };
+
+  const handleDeleteTask = (task: any) => {
+    setTaskToDelete(task);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDelete = () => {
+    if (taskToDelete) {
+      deleteTask(taskToDelete.id);
+      setShowDeleteDialog(false);
+      setTaskToDelete(null);
+    }
   };
 
   const TaskCard = ({ task }: { task: any }) => {
@@ -78,7 +121,7 @@ export function Assessment() {
                 <div className="text-lg font-semibold text-blue-600">{completionRate.toFixed(0)}%</div>
                 <div className="text-xs text-gray-500">Completion</div>
               </div>
-              <div className="flex space-x-2">
+              <div className="flex items-center space-x-2">
                 <Dialog>
                   <DialogTrigger asChild>
                     <Button variant="outline" size="sm">
@@ -93,9 +136,13 @@ export function Assessment() {
                     <TaskDetails task={task} />
                   </DialogContent>
                 </Dialog>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" onClick={() => handleEditTask(task)}>
                   <Edit className="h-4 w-4 mr-1" />
-                  Grade
+                  Edit
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => handleDeleteTask(task)}>
+                  <Trash2 className="h-4 w-4 mr-1" />
+                  Delete
                 </Button>
               </div>
             </div>
@@ -214,7 +261,7 @@ export function Assessment() {
           <Badge variant="secondary" className="bg-green-50 text-green-700">
             CBC Aligned
           </Badge>
-          <Button>
+          <Button onClick={handleAddTask}>
             <Plus className="h-4 w-4 mr-2" />
             Create SBA Task
           </Button>
@@ -228,7 +275,7 @@ export function Assessment() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Active Tasks</p>
-                <p className="text-2xl font-bold text-blue-600">{mockSBATasks.length}</p>
+                <p className="text-2xl font-bold text-blue-600">{allTasks.length}</p>
               </div>
               <BookOpen className="h-8 w-8 text-blue-500" />
             </div>
@@ -274,14 +321,14 @@ export function Assessment() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
-          <TabsTrigger value="tasks">SBA Tasks ({mockSBATasks.length})</TabsTrigger>
+          <TabsTrigger value="tasks">SBA Tasks ({allTasks.length})</TabsTrigger>
           <TabsTrigger value="evidence">Evidence ({mockAssessmentEvidence.length})</TabsTrigger>
           <TabsTrigger value="outcomes">Learning Outcomes</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
         </TabsList>
 
         <TabsContent value="tasks" className="space-y-4">
-          {mockSBATasks.map((task) => (
+          {allTasks.map((task) => (
             <TaskCard key={task.id} task={task} />
           ))}
           
@@ -292,7 +339,7 @@ export function Assessment() {
               <p className="text-gray-600 mb-4">
                 Design competency-based assessments aligned to CBC learning outcomes
               </p>
-              <Button>
+              <Button onClick={handleAddTask}>
                 <Plus className="h-4 w-4 mr-2" />
                 Create SBA Task
               </Button>
@@ -309,7 +356,7 @@ export function Assessment() {
                     <div className="flex items-center space-x-2 mb-2">
                       <Badge variant="secondary">Grace Wanjiku</Badge>
                       <Badge variant="outline">
-                        {mockSBATasks.find(t => t.id === evidence.task_id)?.title}
+                        {allTasks.find(t => t.id === evidence.task_id)?.title}
                       </Badge>
                     </div>
                     <p className="text-gray-700 mb-3">{evidence.comment}</p>
@@ -449,6 +496,38 @@ export function Assessment() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Task Form Dialog */}
+      <Dialog open={showTaskForm} onOpenChange={setShowTaskForm}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <TaskForm
+            task={selectedTask}
+            onClose={() => setShowTaskForm(false)}
+            onSave={handleSaveTask}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete SBA Task</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p>Are you sure you want to delete <strong>{taskToDelete?.title}</strong>?</p>
+            <p className="text-sm text-gray-600">This action cannot be undone and will remove all associated evidence.</p>
+            <div className="flex space-x-2">
+              <Button variant="destructive" onClick={confirmDelete}>
+                Delete Task
+              </Button>
+              <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

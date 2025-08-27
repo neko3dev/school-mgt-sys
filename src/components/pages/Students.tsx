@@ -6,7 +6,9 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { mockLearners, mockClassrooms, mockSubjects } from '@/data/mock-data';
+import { mockLearners, mockClassrooms } from '@/data/mock-data';
+import { useStudents } from '@/store';
+import { StudentForm } from '@/components/forms/StudentForm';
 import { formatDate } from '@/lib/utils';
 import { 
   Search, 
@@ -15,21 +17,29 @@ import {
   Edit, 
   FileText, 
   Users, 
-  Calendar,
-  MapPin,
   Phone,
   Mail,
   AlertTriangle,
   CheckCircle,
   QrCode,
-  Download
+  Download,
+  Trash2
 } from 'lucide-react';
 
 export function Students() {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('all');
+  const [showStudentForm, setShowStudentForm] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState<any>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [studentToDelete, setStudentToDelete] = useState<any>(null);
+  
+  const { students, addStudent, updateStudent, deleteStudent } = useStudents();
+  
+  // Use mock data initially, but allow for real CRUD operations
+  const allStudents = students.length > 0 ? students : mockLearners;
 
-  const filteredStudents = mockLearners.filter(student =>
+  const filteredStudents = allStudents.filter(student =>
     student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     student.admission_no.toLowerCase().includes(searchTerm.toLowerCase()) ||
     student.upi.toLowerCase().includes(searchTerm.toLowerCase())
@@ -37,6 +47,37 @@ export function Students() {
 
   const getClassroom = (classroomId: string) => {
     return mockClassrooms.find(c => c.id === classroomId);
+  };
+
+  const handleAddStudent = () => {
+    setSelectedStudent(null);
+    setShowStudentForm(true);
+  };
+
+  const handleEditStudent = (student: any) => {
+    setSelectedStudent(student);
+    setShowStudentForm(true);
+  };
+
+  const handleSaveStudent = (studentData: any) => {
+    if (selectedStudent) {
+      updateStudent(selectedStudent.id, studentData);
+    } else {
+      addStudent(studentData);
+    }
+  };
+
+  const handleDeleteStudent = (student: any) => {
+    setStudentToDelete(student);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDelete = () => {
+    if (studentToDelete) {
+      deleteStudent(studentToDelete.id);
+      setShowDeleteDialog(false);
+      setStudentToDelete(null);
+    }
   };
 
   const StudentCard = ({ student }: { student: any }) => {
@@ -73,7 +114,7 @@ export function Students() {
                 </div>
               </div>
             </div>
-            <div className="flex space-x-2">
+            <div className="flex items-center space-x-2">
               <Dialog>
                 <DialogTrigger asChild>
                   <Button variant="outline" size="sm">
@@ -88,9 +129,13 @@ export function Students() {
                   <StudentProfile student={student} />
                 </DialogContent>
               </Dialog>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={() => handleEditStudent(student)}>
                 <Edit className="h-4 w-4 mr-1" />
                 Edit
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => handleDeleteStudent(student)}>
+                <Trash2 className="h-4 w-4 mr-1" />
+                Delete
               </Button>
             </div>
           </div>
@@ -220,7 +265,7 @@ export function Students() {
           <Badge variant="secondary" className="bg-blue-50 text-blue-700">
             {filteredStudents.length} Students
           </Badge>
-          <Button>
+          <Button onClick={handleAddStudent}>
             <Plus className="h-4 w-4 mr-2" />
             Add Student
           </Button>
@@ -277,7 +322,7 @@ export function Students() {
             <p className="text-gray-600 mb-4">
               {searchTerm ? 'Try adjusting your search criteria' : 'Get started by adding your first student'}
             </p>
-            <Button>
+            <Button onClick={handleAddStudent}>
               <Plus className="h-4 w-4 mr-2" />
               Add Student
             </Button>
@@ -292,7 +337,7 @@ export function Students() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Total Enrolled</p>
-                <p className="text-2xl font-bold text-blue-600">{mockLearners.length}</p>
+                <p className="text-2xl font-bold text-blue-600">{allStudents.length}</p>
               </div>
               <Users className="h-8 w-8 text-blue-500" />
             </div>
@@ -305,7 +350,7 @@ export function Students() {
               <div>
                 <p className="text-sm text-gray-600">Active Status</p>
                 <p className="text-2xl font-bold text-green-600">
-                  {mockLearners.filter(s => s.status === 'active').length}
+                  {allStudents.filter(s => s.status === 'active').length}
                 </p>
               </div>
               <CheckCircle className="h-8 w-8 text-green-500" />
@@ -319,7 +364,7 @@ export function Students() {
               <div>
                 <p className="text-sm text-gray-600">SNE Support</p>
                 <p className="text-2xl font-bold text-orange-600">
-                  {mockLearners.filter(s => s.special_needs).length}
+                  {allStudents.filter(s => s.special_needs).length}
                 </p>
               </div>
               <AlertTriangle className="h-8 w-8 text-orange-500" />
@@ -339,6 +384,38 @@ export function Students() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Student Form Dialog */}
+      <Dialog open={showStudentForm} onOpenChange={setShowStudentForm}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <StudentForm
+            student={selectedStudent}
+            onClose={() => setShowStudentForm(false)}
+            onSave={handleSaveStudent}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Student</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p>Are you sure you want to delete <strong>{studentToDelete?.name}</strong>?</p>
+            <p className="text-sm text-gray-600">This action cannot be undone.</p>
+            <div className="flex space-x-2">
+              <Button variant="destructive" onClick={confirmDelete}>
+                Delete Student
+              </Button>
+              <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
