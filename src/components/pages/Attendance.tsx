@@ -12,6 +12,7 @@ import { Progress } from '@/components/ui/progress';
 import { mockAttendance, mockLearners, mockClassrooms } from '@/data/mock-data';
 import { useAttendance } from '@/store';
 import { formatDate } from '@/lib/utils';
+import { ReportExporter } from '@/components/features/ReportExporter';
 import { 
   Calendar, 
   Users, 
@@ -36,12 +37,9 @@ export function Attendance() {
   const [showMarkAttendance, setShowMarkAttendance] = useState(false);
   const [showBulkMark, setShowBulkMark] = useState(false);
   const [attendanceData, setAttendanceData] = useState<any>({});
-  const [reportConfig, setReportConfig] = useState({
-    format: 'pdf',
-    dateRange: 'today',
-    includeReasons: true,
-    groupByClass: true
-  });
+  const [showReportExporter, setShowReportExporter] = useState(false);
+  const [showEditAttendance, setShowEditAttendance] = useState(false);
+  const [selectedRecord, setSelectedRecord] = useState<any>(null);
 
   const { attendance, addAttendanceRecord, updateAttendanceRecord, deleteAttendanceRecord } = useAttendance();
 
@@ -74,6 +72,25 @@ export function Attendance() {
     addAttendanceRecord(record);
   };
 
+  const handleEditRecord = (record: any) => {
+    setSelectedRecord(record);
+    setShowEditAttendance(true);
+  };
+
+  const handleUpdateRecord = (recordData: any) => {
+    if (selectedRecord) {
+      updateAttendanceRecord(selectedRecord.id, recordData);
+    }
+    setShowEditAttendance(false);
+    setSelectedRecord(null);
+  };
+
+  const handleDeleteRecord = (record: any) => {
+    if (confirm(`Delete attendance record for ${getStudent(record.learner_id)?.name}?`)) {
+      deleteAttendanceRecord(record.id);
+    }
+  };
+
   const handleBulkMarkAttendance = () => {
     const students = mockLearners.filter(s => s.status === 'active');
     students.forEach(student => {
@@ -82,36 +99,6 @@ export function Attendance() {
     });
     setShowBulkMark(false);
     setAttendanceData({});
-  };
-
-  const generateAttendanceReport = () => {
-    const reportData = {
-      title: `Attendance Report - ${formatDate(selectedDate)}`,
-      date: selectedDate,
-      format: reportConfig.format,
-      data: todayAttendance,
-      summary: {
-        total: totalStudents,
-        present: presentCount,
-        absent: absentCount,
-        late: lateCount,
-        rate: attendanceRate
-      }
-    };
-
-    // Simulate report generation
-    console.log('Generating attendance report:', reportData);
-    
-    // In a real system, this would call an API
-    setTimeout(() => {
-      const blob = new Blob([JSON.stringify(reportData, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `attendance-report-${selectedDate}.${reportConfig.format}`;
-      a.click();
-      URL.revokeObjectURL(url);
-    }, 1000);
   };
 
   const BulkAttendanceForm = () => {
@@ -167,71 +154,6 @@ export function Attendance() {
     );
   };
 
-  const ReportGenerator = () => {
-    return (
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold">Generate Attendance Report</h3>
-        
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label>Report Format</Label>
-            <Select value={reportConfig.format} onValueChange={(value) => setReportConfig(prev => ({ ...prev, format: value }))}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="pdf">PDF Report</SelectItem>
-                <SelectItem value="xlsx">Excel Spreadsheet</SelectItem>
-                <SelectItem value="csv">CSV Data</SelectItem>
-                <SelectItem value="json">JSON Export</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div>
-            <Label>Date Range</Label>
-            <Select value={reportConfig.dateRange} onValueChange={(value) => setReportConfig(prev => ({ ...prev, dateRange: value }))}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="today">Today Only</SelectItem>
-                <SelectItem value="week">This Week</SelectItem>
-                <SelectItem value="month">This Month</SelectItem>
-                <SelectItem value="term">Current Term</SelectItem>
-                <SelectItem value="custom">Custom Range</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <label className="flex items-center space-x-2">
-            <input 
-              type="checkbox" 
-              checked={reportConfig.includeReasons}
-              onChange={(e) => setReportConfig(prev => ({ ...prev, includeReasons: e.target.checked }))}
-            />
-            <span className="text-sm">Include absence reasons</span>
-          </label>
-          <label className="flex items-center space-x-2">
-            <input 
-              type="checkbox" 
-              checked={reportConfig.groupByClass}
-              onChange={(e) => setReportConfig(prev => ({ ...prev, groupByClass: e.target.checked }))}
-            />
-            <span className="text-sm">Group by class</span>
-          </label>
-        </div>
-
-        <Button onClick={generateAttendanceReport} className="w-full">
-          <Download className="h-4 w-4 mr-2" />
-          Generate Report
-        </Button>
-      </div>
-    );
-  };
-
   const AttendanceCard = ({ record }: { record: any }) => {
     const student = getStudent(record.learner_id);
     const classroom = student ? getClassroom(student.classroom_id) : null;
@@ -267,6 +189,14 @@ export function Attendance() {
               <Badge variant={record.status === 'present' ? 'default' : 'secondary'}>
                 {record.status}
               </Badge>
+              <div className="flex space-x-1 mt-2">
+                <Button variant="outline" size="sm" onClick={() => handleEditRecord(record)}>
+                  <Edit className="h-3 w-3" />
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => handleDeleteRecord(record)}>
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              </div>
               {record.reason && (
                 <p className="text-xs text-gray-500 mt-1">{record.reason}</p>
               )}
@@ -350,6 +280,13 @@ export function Attendance() {
             <Plus className="h-4 w-4 mr-2" />
             Mark Attendance
           </Button>
+          <Button onClick={() => setShowReportExporter(true)}>
+            <FileText className="h-4 w-4 mr-2" />
+            Generate Reports
+          </Button>
+        </div>
+
+        <div className="flex items-center space-x-4">
           <Dialog>
             <DialogTrigger asChild>
               <Button variant="outline">
@@ -361,10 +298,13 @@ export function Attendance() {
               <DialogHeader>
                 <DialogTitle>Attendance Report</DialogTitle>
               </DialogHeader>
-              <ReportGenerator />
+              <ReportExporter 
+                data={todayAttendance} 
+                title="Attendance Report" 
+                type="attendance"
+              />
             </DialogContent>
           </Dialog>
-        </div>
       </div>
 
       {/* Daily Stats */}
@@ -441,6 +381,24 @@ export function Attendance() {
               <Download className="h-4 w-4 mr-2" />
               Export Today's Report
             </Button>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button>
+                  <FileText className="h-4 w-4 mr-2" />
+                  All Reports
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-3xl">
+                <DialogHeader>
+                  <DialogTitle>Attendance Reports</DialogTitle>
+                </DialogHeader>
+                <ReportExporter 
+                  data={mockAttendance} 
+                  title="Comprehensive Attendance Report" 
+                  type="attendance"
+                />
+              </DialogContent>
+            </Dialog>
           </div>
 
           {todayAttendance.length > 0 ? (
@@ -659,5 +617,83 @@ export function Attendance() {
         </DialogContent>
       </Dialog>
     </div>
+      {/* Edit Attendance Dialog */}
+      <Dialog open={showEditAttendance} onOpenChange={setShowEditAttendance}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Attendance Record</DialogTitle>
+          </DialogHeader>
+          <AttendanceEditForm 
+            record={selectedRecord}
+            onSave={handleUpdateRecord}
+            onCancel={() => setShowEditAttendance(false)}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Report Exporter Dialog */}
+      <Dialog open={showReportExporter} onOpenChange={setShowReportExporter}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Generate Attendance Reports</DialogTitle>
+          </DialogHeader>
+          <ReportExporter 
+            data={mockAttendance} 
+            title="Attendance Reports" 
+            type="attendance"
+            onClose={() => setShowReportExporter(false)}
+          />
+        </DialogContent>
+      </Dialog>
+  );
+}
+
+const AttendanceEditForm = ({ record, onSave, onCancel }: { record: any; onSave: (data: any) => void; onCancel: () => void }) => {
+  const [formData, setFormData] = useState({
+    status: record?.status || 'present',
+    reason: record?.reason || ''
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSave({ ...record, ...formData });
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <Label>Status</Label>
+        <Select value={formData.status} onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="present">Present</SelectItem>
+            <SelectItem value="absent">Absent</SelectItem>
+            <SelectItem value="late">Late</SelectItem>
+            <SelectItem value="excused">Excused</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      
+      <div>
+        <Label>Reason (Optional)</Label>
+        <Input
+          value={formData.reason}
+          onChange={(e) => setFormData(prev => ({ ...prev, reason: e.target.value }))}
+          placeholder="Enter reason for absence/lateness"
+        />
+      </div>
+
+      <div className="flex space-x-2">
+        <Button type="submit">
+          <Save className="h-4 w-4 mr-2" />
+          Update Record
+        </Button>
+        <Button type="button" variant="outline" onClick={onCancel}>
+          Cancel
+        </Button>
+      </div>
+    </form>
   );
 }

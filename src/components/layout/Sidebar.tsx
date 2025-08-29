@@ -12,8 +12,12 @@ import {
   Shield,
   Settings,
   ChevronLeft,
-  GraduationCap
+  GraduationCap,
+  Clock,
+  Heart,
+  MessageSquare
 } from 'lucide-react';
+import { BarChart3, BookOpen as LibraryIcon, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
@@ -33,7 +37,14 @@ export function Sidebar({ currentPage, onNavigate }: SidebarProps) {
     { id: 'finance', label: 'Finance', icon: CreditCard, badge: 'KES 2.4M' },
     { id: 'attendance', label: 'Attendance', icon: Calendar, badge: '98.5%' },
     { id: 'transport', label: 'Transport', icon: Bus, badge: '4 Routes' },
+    { id: 'timetable', label: 'Timetable', icon: Clock, badge: '125 Lessons' },
+    { id: 'staff', label: 'Staff & TPAD', icon: GraduationCap, badge: '25' },
+    { id: 'welfare', label: 'Welfare & SNE', icon: Heart, badge: '2' },
+    { id: 'communications', label: 'Communications', icon: MessageSquare, badge: '156' },
     { id: 'reports', label: 'Reports', icon: FileText, badge: null },
+    { id: 'analytics', label: 'Analytics', icon: BarChart3, badge: null },
+    { id: 'library', label: 'Library', icon: LibraryIcon, badge: '245' },
+    { id: 'inventory', label: 'Inventory', icon: Package, badge: '89' },
     { id: 'privacy', label: 'DPO Console', icon: Shield, badge: '3' },
     { id: 'settings', label: 'Settings', icon: Settings, badge: null },
   ];
@@ -43,7 +54,7 @@ export function Sidebar({ currentPage, onNavigate }: SidebarProps) {
       return ['overview', 'students', 'finance', 'attendance', 'transport', 'reports'].includes(item.id);
     }
     if (user?.role === 'teacher' || user?.role === 'class_teacher') {
-      return !['finance', 'privacy', 'settings'].includes(item.id);
+      return !['finance', 'privacy', 'settings', 'staff'].includes(item.id);
     }
     return true; // Admin sees everything
   });

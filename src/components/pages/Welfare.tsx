@@ -8,10 +8,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { mockLearners } from '@/data/mock-data';
 import { formatDate, generateId } from '@/lib/utils';
 import { ReportExporter } from '@/components/features/ReportExporter';
+import { useWelfare } from '@/store';
 import { 
   Heart, 
   Shield, 
@@ -24,12 +24,12 @@ import {
   Users,
   FileText,
   Lock,
-  Unlock,
   Search,
-  Filter,
   Download,
   Save,
-  X
+  X,
+  Trash2,
+  Award
 } from 'lucide-react';
 
 export function Welfare() {
@@ -39,7 +39,13 @@ export function Welfare() {
   const [selectedCase, setSelectedCase] = useState<any>(null);
   const [showSNEForm, setShowSNEForm] = useState(false);
   const [selectedSNEPlan, setSelectedSNEPlan] = useState<any>(null);
-  const [showExporter, setShowExporter] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<any>(null);
+  const [showReportExporter, setShowReportExporter] = useState(false);
+  const [showCaseDetails, setShowCaseDetails] = useState(false);
+  const [showSNEDetails, setShowSNEDetails] = useState(false);
+
+  const { cases, snePlans, addCase, updateCase, deleteCase, addSNEPlan, updateSNEPlan, deleteSNEPlan } = useWelfare();
 
   const mockWelfareCases = [
     {
@@ -81,7 +87,7 @@ export function Welfare() {
           id: generateId(),
           type: 'extra_time',
           description: 'Additional 50% time for assessments',
-          subjects: ['sub-3'] // Mathematics
+          subjects: ['sub-3']
         },
         {
           id: generateId(),
@@ -97,8 +103,81 @@ export function Welfare() {
     }
   ];
 
+  const allCases = cases.length > 0 ? cases : mockWelfareCases;
+  const allSNEPlans = snePlans.length > 0 ? snePlans : mockSNEPlans;
+
   const getStudent = (studentId: string) => {
     return mockLearners.find(s => s.id === studentId);
+  };
+
+  const handleAddCase = () => {
+    setSelectedCase(null);
+    setShowCaseForm(true);
+  };
+
+  const handleEditCase = (welfareCase: any) => {
+    setSelectedCase(welfareCase);
+    setShowCaseForm(true);
+  };
+
+  const handleSaveCase = (caseData: any) => {
+    if (selectedCase) {
+      updateCase(selectedCase.id, caseData);
+    } else {
+      addCase(caseData);
+    }
+    setShowCaseForm(false);
+  };
+
+  const handleDeleteCase = (welfareCase: any) => {
+    setItemToDelete({ type: 'case', item: welfareCase });
+    setShowDeleteDialog(true);
+  };
+
+  const handleAddSNEPlan = () => {
+    setSelectedSNEPlan(null);
+    setShowSNEForm(true);
+  };
+
+  const handleEditSNEPlan = (plan: any) => {
+    setSelectedSNEPlan(plan);
+    setShowSNEForm(true);
+  };
+
+  const handleSaveSNEPlan = (planData: any) => {
+    if (selectedSNEPlan) {
+      updateSNEPlan(selectedSNEPlan.id, planData);
+    } else {
+      addSNEPlan(planData);
+    }
+    setShowSNEForm(false);
+  };
+
+  const handleDeleteSNEPlan = (plan: any) => {
+    setItemToDelete({ type: 'sne', item: plan });
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDelete = () => {
+    if (itemToDelete) {
+      if (itemToDelete.type === 'case') {
+        deleteCase(itemToDelete.item.id);
+      } else {
+        deleteSNEPlan(itemToDelete.item.id);
+      }
+      setShowDeleteDialog(false);
+      setItemToDelete(null);
+    }
+  };
+
+  const handleViewCase = (welfareCase: any) => {
+    setSelectedCase(welfareCase);
+    setShowCaseDetails(true);
+  };
+
+  const handleViewSNEPlan = (plan: any) => {
+    setSelectedSNEPlan(plan);
+    setShowSNEDetails(true);
   };
 
   const WelfareCaseCard = ({ welfareCase }: { welfareCase: any }) => {
@@ -152,13 +231,21 @@ export function Welfare() {
               </div>
               
               <div className="flex space-x-2">
-                <Button variant="outline" size="sm" onClick={() => setSelectedCase(welfareCase)}>
+                <Button variant="outline" size="sm" onClick={() => handleViewCase(welfareCase)}>
                   <Eye className="h-4 w-4 mr-1" />
                   View
                 </Button>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" onClick={() => handleEditCase(welfareCase)}>
                   <Edit className="h-4 w-4 mr-1" />
                   Edit
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => handleDeleteCase(welfareCase)}>
+                  <Trash2 className="h-4 w-4 mr-1" />
+                  Delete
+                </Button>
+                <Button size="sm">
+                  <FileText className="h-4 w-4 mr-1" />
+                  Report
                 </Button>
               </div>
             </div>
@@ -220,13 +307,21 @@ export function Welfare() {
               </div>
               
               <div className="flex space-x-2">
-                <Button variant="outline" size="sm" onClick={() => setSelectedSNEPlan(plan)}>
+                <Button variant="outline" size="sm" onClick={() => handleViewSNEPlan(plan)}>
                   <Eye className="h-4 w-4 mr-1" />
                   View
                 </Button>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" onClick={() => handleEditSNEPlan(plan)}>
                   <Edit className="h-4 w-4 mr-1" />
                   Edit
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => handleDeleteSNEPlan(plan)}>
+                  <Trash2 className="h-4 w-4 mr-1" />
+                  Delete
+                </Button>
+                <Button size="sm">
+                  <Award className="h-4 w-4 mr-1" />
+                  Progress
                 </Button>
               </div>
             </div>
@@ -248,9 +343,7 @@ export function Welfare() {
 
     const handleSubmit = (e: React.FormEvent) => {
       e.preventDefault();
-      // In real system, this would save to backend
-      console.log('Saving welfare case:', formData);
-      setShowCaseForm(false);
+      handleSaveCase(formData);
     };
 
     return (
@@ -394,8 +487,7 @@ export function Welfare() {
 
     const handleSubmit = (e: React.FormEvent) => {
       e.preventDefault();
-      console.log('Saving SNE plan:', formData);
-      setShowSNEForm(false);
+      handleSaveSNEPlan(formData);
     };
 
     return (
@@ -515,16 +607,34 @@ export function Welfare() {
         </div>
         <div className="flex items-center space-x-3">
           <Badge variant="secondary" className="bg-green-50 text-green-700">
-            {mockWelfareCases.length} Active Cases
+            {allCases.length} Active Cases
           </Badge>
-          <Button onClick={() => setShowCaseForm(true)}>
+          <Button onClick={handleAddCase}>
             <Plus className="h-4 w-4 mr-2" />
             New Case
           </Button>
-          <Button variant="outline" onClick={() => setShowExporter(true)}>
-            <Download className="h-4 w-4 mr-2" />
-            Export Reports
+          <Button onClick={() => setShowReportExporter(true)} variant="outline">
+            <FileText className="h-4 w-4 mr-2" />
+            Welfare Reports
           </Button>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <Download className="h-4 w-4 mr-2" />
+                Export Reports
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-3xl">
+              <DialogHeader>
+                <DialogTitle>Welfare & SNE Reports</DialogTitle>
+              </DialogHeader>
+              <ReportExporter 
+                data={allCases} 
+                title="Welfare Reports" 
+                type="privacy"
+              />
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
@@ -535,7 +645,7 @@ export function Welfare() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Active Cases</p>
-                <p className="text-2xl font-bold text-blue-600">{mockWelfareCases.filter(c => c.status !== 'resolved').length}</p>
+                <p className="text-2xl font-bold text-blue-600">{allCases.filter(c => c.status !== 'resolved').length}</p>
               </div>
               <Heart className="h-8 w-8 text-blue-500" />
             </div>
@@ -559,7 +669,7 @@ export function Welfare() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Critical Cases</p>
-                <p className="text-2xl font-bold text-red-600">{mockWelfareCases.filter(c => c.priority === 'critical').length}</p>
+                <p className="text-2xl font-bold text-red-600">{allCases.filter(c => c.priority === 'critical').length}</p>
               </div>
               <AlertTriangle className="h-8 w-8 text-red-500" />
             </div>
@@ -571,7 +681,7 @@ export function Welfare() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">This Month</p>
-                <p className="text-2xl font-bold text-purple-600">{mockWelfareCases.length}</p>
+                <p className="text-2xl font-bold text-purple-600">{allCases.length}</p>
               </div>
               <FileText className="h-8 w-8 text-purple-500" />
             </div>
@@ -582,8 +692,8 @@ export function Welfare() {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="cases">Welfare Cases ({mockWelfareCases.length})</TabsTrigger>
-          <TabsTrigger value="sne">SNE Plans ({mockSNEPlans.length})</TabsTrigger>
+          <TabsTrigger value="cases">Welfare Cases ({allCases.length})</TabsTrigger>
+          <TabsTrigger value="sne">SNE Plans ({allSNEPlans.length})</TabsTrigger>
           <TabsTrigger value="safeguarding">Safeguarding</TabsTrigger>
         </TabsList>
 
@@ -596,10 +706,10 @@ export function Welfare() {
               <CardContent>
                 <div className="space-y-3">
                   {[
-                    { priority: 'Critical', count: 0, color: 'bg-red-500' },
-                    { priority: 'High', count: 0, color: 'bg-orange-500' },
-                    { priority: 'Medium', count: 1, color: 'bg-yellow-500' },
-                    { priority: 'Low', count: 1, color: 'bg-green-500' }
+                    { priority: 'Critical', count: allCases.filter(c => c.priority === 'critical').length, color: 'bg-red-500' },
+                    { priority: 'High', count: allCases.filter(c => c.priority === 'high').length, color: 'bg-orange-500' },
+                    { priority: 'Medium', count: allCases.filter(c => c.priority === 'medium').length, color: 'bg-yellow-500' },
+                    { priority: 'Low', count: allCases.filter(c => c.priority === 'low').length, color: 'bg-green-500' }
                   ].map((item) => (
                     <div key={item.priority} className="flex items-center justify-between">
                       <span className="text-sm font-medium">{item.priority}</span>
@@ -621,14 +731,14 @@ export function Welfare() {
                 <div className="space-y-4">
                   <div className="text-center p-4 bg-blue-50 rounded-lg">
                     <Shield className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-                    <p className="font-semibold text-blue-800">{mockSNEPlans.length} Active Plans</p>
+                    <p className="font-semibold text-blue-800">{allSNEPlans.length} Active Plans</p>
                     <p className="text-sm text-blue-600">Students with support plans</p>
                   </div>
                   
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span>Implementation stage:</span>
-                      <span className="font-semibold">{mockSNEPlans.filter(p => p.stage === 'implementation').length}</span>
+                      <span className="font-semibold">{allSNEPlans.filter(p => p.stage === 'implementation').length}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span>Due for review:</span>
@@ -652,13 +762,9 @@ export function Welfare() {
                 className="pl-10"
               />
             </div>
-            <Button variant="outline">
-              <Filter className="h-4 w-4 mr-2" />
-              Filter
-            </Button>
           </div>
 
-          {mockWelfareCases.map((welfareCase) => (
+          {allCases.map((welfareCase) => (
             <WelfareCaseCard key={welfareCase.id} welfareCase={welfareCase} />
           ))}
         </TabsContent>
@@ -667,19 +773,19 @@ export function Welfare() {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <Badge variant="outline">
-                Active Plans: {mockSNEPlans.length}
+                Active Plans: {allSNEPlans.length}
               </Badge>
               <Badge variant="secondary">
                 Students with SNE: {mockLearners.filter(s => s.special_needs).length}
               </Badge>
             </div>
-            <Button onClick={() => setShowSNEForm(true)}>
+            <Button onClick={handleAddSNEPlan}>
               <Plus className="h-4 w-4 mr-2" />
               New SNE Plan
             </Button>
           </div>
 
-          {mockSNEPlans.map((plan) => (
+          {allSNEPlans.map((plan) => (
             <SNEPlanCard key={plan.id} plan={plan} />
           ))}
         </TabsContent>
@@ -732,19 +838,133 @@ export function Welfare() {
         </DialogContent>
       </Dialog>
 
-      {/* Report Exporter Dialog */}
-      <Dialog open={showExporter} onOpenChange={setShowExporter}>
-        <DialogContent className="max-w-2xl">
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle>Export Welfare Reports</DialogTitle>
+            <DialogTitle>Delete {itemToDelete?.type === 'case' ? 'Welfare Case' : 'SNE Plan'}</DialogTitle>
           </DialogHeader>
-          <ReportExporter 
-            data={mockWelfareCases} 
-            title="Welfare Reports" 
-            type="privacy"
-          />
+          <div className="space-y-4">
+            <p>Are you sure you want to delete this {itemToDelete?.type === 'case' ? 'welfare case' : 'SNE plan'}?</p>
+            <p className="text-sm text-gray-600">This action cannot be undone.</p>
+            <div className="flex space-x-2">
+              <Button variant="destructive" onClick={confirmDelete}>
+                Delete {itemToDelete?.type === 'case' ? 'Case' : 'Plan'}
+              </Button>
+              <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
+                Cancel
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
+
+      {/* Case Details Dialog */}
+      <Dialog open={showCaseDetails} onOpenChange={setShowCaseDetails}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Welfare Case Details</DialogTitle>
+          </DialogHeader>
+          <CaseDetailsView case={selectedCase} />
+        </DialogContent>
+      </Dialog>
+
+      {/* SNE Details Dialog */}
+      <Dialog open={showSNEDetails} onOpenChange={setShowSNEDetails}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>SNE Plan Details</DialogTitle>
+          </DialogHeader>
+          <SNEPlanDetailsView plan={selectedSNEPlan} />
+        </DialogContent>
+      </Dialog>
+
+      {/* Report Exporter Dialog */}
+      <Dialog open={showReportExporter} onOpenChange={setShowReportExporter}>
+        <DialogContent className="max-w-4xl">
+          <ReportExporter data={allCases} title="Welfare Reports" type="privacy" />
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+const CaseDetailsView = ({ case: welfareCase }: { case: any }) => {
+  if (!welfareCase) return null;
+
+  const student = mockLearners.find(s => s.id === welfareCase.learner_id);
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-2 gap-6">
+        <div>
+          <Label>Student</Label>
+          <p className="font-medium">{student?.name}</p>
+        </div>
+        <div>
+          <Label>Category</Label>
+          <Badge variant="secondary" className="capitalize">{welfareCase.category}</Badge>
+        </div>
+      </div>
+      
+      <div>
+        <Label>Summary</Label>
+        <p className="text-gray-700">{welfareCase.summary}</p>
+      </div>
+
+      <div className="flex space-x-2">
+        <Button className="flex-1">
+          <Edit className="h-4 w-4 mr-2" />
+          Edit Case
+        </Button>
+        <Button variant="outline" className="flex-1">
+          <Download className="h-4 w-4 mr-2" />
+          Export
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+const SNEPlanDetailsView = ({ plan }: { plan: any }) => {
+  if (!plan) return null;
+
+  const student = mockLearners.find(s => s.id === plan.learner_id);
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-2 gap-6">
+        <div>
+          <Label>Student</Label>
+          <p className="font-medium">{student?.name}</p>
+        </div>
+        <div>
+          <Label>Stage</Label>
+          <Badge variant="secondary" className="capitalize">{plan.stage}</Badge>
+        </div>
+      </div>
+      
+      <div>
+        <Label>Accommodations</Label>
+        <div className="space-y-2">
+          {plan.accommodations?.map((acc: any, index: number) => (
+            <div key={index} className="p-3 bg-gray-50 rounded">
+              <p className="font-medium capitalize">{acc.type.replace('_', ' ')}</p>
+              <p className="text-sm text-gray-600">{acc.description}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="flex space-x-2">
+        <Button className="flex-1">
+          <Edit className="h-4 w-4 mr-2" />
+          Edit Plan
+        </Button>
+        <Button variant="outline" className="flex-1">
+          <Download className="h-4 w-4 mr-2" />
+          Export Plan
+        </Button>
+      </div>
     </div>
   );
 }

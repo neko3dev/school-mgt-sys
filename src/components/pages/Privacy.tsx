@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
 import { formatDate, generateId } from '@/lib/utils';
+import { ReportExporter } from '@/components/features/ReportExporter';
 import { 
   Shield, 
   Eye, 
@@ -345,10 +346,24 @@ export function Privacy() {
             <Plus className="h-4 w-4 mr-2" />
             New Processing Record
           </Button>
-          <Button variant="outline">
-            <Download className="h-4 w-4 mr-2" />
-            Export Compliance Pack
-          </Button>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <Download className="h-4 w-4 mr-2" />
+                Export Compliance Pack
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-3xl">
+              <DialogHeader>
+                <DialogTitle>Privacy & Compliance Reports</DialogTitle>
+              </DialogHeader>
+              <ReportExporter 
+                data={mockProcessingRecords} 
+                title="Privacy Compliance Reports" 
+                type="privacy"
+              />
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 

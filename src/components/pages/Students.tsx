@@ -10,6 +10,7 @@ import { mockLearners, mockClassrooms } from '@/data/mock-data';
 import { useStudents } from '@/store';
 import { StudentForm } from '@/components/forms/StudentForm';
 import { formatDate } from '@/lib/utils';
+import { ReportExporter } from '@/components/features/ReportExporter';
 import { 
   Search, 
   Plus, 

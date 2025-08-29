@@ -9,6 +9,7 @@ import { mockSBATasks, mockAssessmentEvidence, mockOutcomeMaps, mockSubjects, mo
 import { useAssessment } from '@/store';
 import { TaskForm } from '@/components/forms/TaskForm';
 import { formatDate } from '@/lib/utils';
+import { ReportExporter } from '@/components/features/ReportExporter';
 import { 
   BookOpen, 
   Plus, 
@@ -27,7 +28,8 @@ import {
   TrendingUp,
   Users,
   Award,
-  Trash2
+  Trash2,
+  Download
 } from 'lucide-react';
 
 export function Assessment() {
@@ -140,6 +142,24 @@ export function Assessment() {
                   <Edit className="h-4 w-4 mr-1" />
                   Edit
                 </Button>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      <Download className="h-4 w-4 mr-1" />
+                      Export
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                      <DialogTitle>Export Assessment Data</DialogTitle>
+                    </DialogHeader>
+                    <ReportExporter 
+                      data={task} 
+                      title={`${task.title} Assessment`} 
+                      type="assessment"
+                    />
+                  </DialogContent>
+                </Dialog>
                 <Button variant="outline" size="sm" onClick={() => handleDeleteTask(task)}>
                   <Trash2 className="h-4 w-4 mr-1" />
                   Delete
@@ -246,6 +266,31 @@ export function Assessment() {
             ))}
           </div>
         </div>
+
+        <div className="flex space-x-2">
+          <Button className="flex-1">
+            <FileText className="h-4 w-4 mr-2" />
+            Generate Report Card
+          </Button>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="flex-1">
+                <Download className="h-4 w-4 mr-2" />
+                Export Evidence
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Export Assessment Evidence</DialogTitle>
+              </DialogHeader>
+              <ReportExporter 
+                data={task} 
+                title={`${task.title} Evidence Bundle`} 
+                type="assessment"
+              />
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
     );
   };
@@ -265,6 +310,24 @@ export function Assessment() {
             <Plus className="h-4 w-4 mr-2" />
             Create SBA Task
           </Button>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <FileText className="h-4 w-4 mr-2" />
+                Generate Reports
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-3xl">
+              <DialogHeader>
+                <DialogTitle>Assessment Reports</DialogTitle>
+              </DialogHeader>
+              <ReportExporter 
+                data={allTasks} 
+                title="Assessment Reports" 
+                type="assessment"
+              />
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 

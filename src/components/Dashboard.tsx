@@ -10,6 +10,13 @@ import { Transport } from './pages/Transport';
 import { Reports } from './pages/Reports';
 import { Privacy } from './pages/Privacy';
 import { Settings } from './pages/Settings';
+import { Staff } from './pages/Staff';
+import { Timetable } from './pages/Timetable';
+import { Welfare } from './pages/Welfare';
+import { Communications } from './pages/Communications';
+import { Analytics } from './pages/Analytics';
+import { Library } from './pages/Library';
+import { Inventory } from './pages/Inventory';
 import { useUI } from '@/store';
 
 const pages = {
@@ -19,9 +26,16 @@ const pages = {
   finance: Finance,
   attendance: Attendance,
   transport: Transport,
+  timetable: Timetable,
+  welfare: Welfare,
+  communications: Communications,
   reports: Reports,
   privacy: Privacy,
   settings: Settings,
+  staff: Staff,
+  analytics: Analytics,
+  library: Library,
+  inventory: Inventory,
 };
 
 export function Dashboard() {

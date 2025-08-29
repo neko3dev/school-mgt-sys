@@ -2,8 +2,15 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { mockTransportRoutes, mockLearners } from '@/data/mock-data';
+import { useTransport } from '@/store';
+import { formatDate } from '@/lib/utils';
+import { ReportExporter } from '@/components/features/ReportExporter';
 import { 
   Bus, 
   MapPin, 
@@ -16,17 +23,256 @@ import {
   Eye,
   Route,
   Smartphone,
-  QrCode
+  QrCode,
+  Edit,
+  Trash2,
+  Save,
+  X,
+  Download,
+  FileText
 } from 'lucide-react';
 
 export function Transport() {
   const [activeTab, setActiveTab] = useState('routes');
+  const [showRouteForm, setShowRouteForm] = useState(false);
+  const [selectedRoute, setSelectedRoute] = useState<any>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [routeToDelete, setRouteToDelete] = useState<any>(null);
+  const [showReportExporter, setShowReportExporter] = useState(false);
+  const [showEventForm, setShowEventForm] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<any>(null);
+  
+  const { routes, addRoute, updateRoute, deleteRoute } = useTransport();
+  
+  // Use mock data initially, but allow for real CRUD operations
+  const allRoutes = routes.length > 0 ? routes : mockTransportRoutes;
 
-  const totalRoutes = mockTransportRoutes.length;
-  const activeRoutes = mockTransportRoutes.filter(r => r.active).length;
-  const totalStops = mockTransportRoutes.reduce((sum, route) => sum + route.stops.length, 0);
+  const totalRoutes = allRoutes.length;
+  const activeRoutes = allRoutes.filter(r => r.active).length;
+  const totalStops = allRoutes.reduce((sum, route) => sum + route.stops.length, 0);
   const studentsOnTransport = Math.floor(mockLearners.length * 0.65); // 65% use transport
 
+  const handleAddRoute = () => {
+    setSelectedRoute(null);
+    setShowRouteForm(true);
+  };
+
+  const handleEditRoute = (route: any) => {
+    setSelectedRoute(route);
+    setShowRouteForm(true);
+  };
+
+  const handleSaveRoute = (routeData: any) => {
+    if (selectedRoute) {
+      updateRoute(selectedRoute.id, routeData);
+    } else {
+      addRoute(routeData);
+    }
+    setShowRouteForm(false);
+  };
+
+  const handleDeleteRoute = (route: any) => {
+    setRouteToDelete(route);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDelete = () => {
+    if (routeToDelete) {
+      deleteRoute(routeToDelete.id);
+      setShowDeleteDialog(false);
+      setRouteToDelete(null);
+    }
+  };
+
+  const handleAddEvent = () => {
+    setSelectedEvent(null);
+    setShowEventForm(true);
+  };
+
+  const handleEditEvent = (event: any) => {
+    setSelectedEvent(event);
+    setShowEventForm(true);
+  };
+
+  const handleSaveEvent = (eventData: any) => {
+    // Implementation for saving transport events
+  };
+
+  const RouteForm = () => {
+    const [formData, setFormData] = useState({
+      name: selectedRoute?.name || '',
+      vehicle_id: selectedRoute?.vehicle_id || '',
+      driver_id: selectedRoute?.driver_id || '',
+      matron_id: selectedRoute?.matron_id || '',
+      active: selectedRoute?.active ?? true,
+      stops: selectedRoute?.stops || []
+    });
+
+    const handleSubmit = (e: React.FormEvent) => {
+      e.preventDefault();
+      handleSaveRoute(formData);
+    };
+
+    const addStop = () => {
+      const newStop = {
+        id: Date.now().toString(),
+        route_id: selectedRoute?.id || '',
+        order: formData.stops.length + 1,
+        name: '',
+        pickup_time: '07:00',
+        dropoff_time: '15:30'
+      };
+      setFormData(prev => ({ ...prev, stops: [...prev.stops, newStop] }));
+    };
+
+    const removeStop = (index: number) => {
+      setFormData(prev => ({
+        ...prev,
+        stops: prev.stops.filter((_: any, i: number) => i !== index)
+      }));
+    };
+
+    const updateStop = (index: number, field: string, value: any) => {
+      setFormData(prev => ({
+        ...prev,
+        stops: prev.stops.map((stop: any, i: number) =>
+          i === index ? { ...stop, [field]: value } : stop
+        )
+      }));
+    };
+
+    return (
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="name">Route Name *</Label>
+            <Input
+              id="name"
+              value={formData.name}
+              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+              required
+            />
+          </div>
+          <div>
+            <Label htmlFor="vehicle_id">Vehicle *</Label>
+            <Select value={formData.vehicle_id} onValueChange={(value) => setFormData(prev => ({ ...prev, vehicle_id: value }))}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select vehicle" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="vehicle-1">KCA 123X</SelectItem>
+                <SelectItem value="vehicle-2">KCB 456Y</SelectItem>
+                <SelectItem value="vehicle-3">KCC 789Z</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="driver_id">Driver *</Label>
+            <Select value={formData.driver_id} onValueChange={(value) => setFormData(prev => ({ ...prev, driver_id: value }))}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select driver" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="driver-1">John Maina</SelectItem>
+                <SelectItem value="driver-2">Peter Kiprotich</SelectItem>
+                <SelectItem value="driver-3">Mary Wanjiku</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label htmlFor="matron_id">Matron (Optional)</Label>
+            <Select value={formData.matron_id} onValueChange={(value) => setFormData(prev => ({ ...prev, matron_id: value }))}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select matron" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="matron-1">Sarah Njeri</SelectItem>
+                <SelectItem value="matron-2">Grace Wanjiku</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <input
+            type="checkbox"
+            id="active"
+            checked={formData.active}
+            onChange={(e) => setFormData(prev => ({ ...prev, active: e.target.checked }))}
+          />
+          <Label htmlFor="active">Route is active</Label>
+        </div>
+
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <Label>Route Stops</Label>
+            <Button type="button" onClick={addStop} size="sm">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Stop
+            </Button>
+          </div>
+          
+          <div className="space-y-4">
+            {formData.stops.map((stop: any, index: number) => (
+              <div key={index} className="p-4 border rounded-lg space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">Stop {index + 1}</span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => removeStop(index)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+                
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <Label>Stop Name</Label>
+                    <Input
+                      value={stop.name}
+                      onChange={(e) => updateStop(index, 'name', e.target.value)}
+                      placeholder="Stop name"
+                    />
+                  </div>
+                  <div>
+                    <Label>Pickup Time</Label>
+                    <Input
+                      type="time"
+                      value={stop.pickup_time}
+                      onChange={(e) => updateStop(index, 'pickup_time', e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label>Dropoff Time</Label>
+                    <Input
+                      type="time"
+                      value={stop.dropoff_time}
+                      onChange={(e) => updateStop(index, 'dropoff_time', e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex space-x-2">
+          <Button type="submit">
+            <Save className="h-4 w-4 mr-2" />
+            {selectedRoute ? 'Update Route' : 'Create Route'}
+          </Button>
+          <Button type="button" variant="outline" onClick={() => setShowRouteForm(false)}>
+            Cancel
+          </Button>
+        </div>
+      </form>
+    );
+  };
   const RouteCard = ({ route }: { route: any }) => {
     const studentsCount = Math.floor(Math.random() * 30) + 15; // Mock student count
     const onTimePercentage = Math.floor(Math.random() * 10) + 90; // Mock on-time performance
@@ -94,6 +340,18 @@ export function Transport() {
               <Button variant="outline" size="sm" onClick={() => handleDeleteRoute(route)}>
                 <Trash2 className="h-4 w-4 mr-1" />
                 Delete
+              </Button>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Download className="h-4 w-4 mr-1" />
+                    Export
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl">
+                  <ReportExporter data={route} title={`${route.name} Report`} type="transport" />
+                </DialogContent>
+              </Dialog>
               </Button>
             </div>
           </div>
@@ -180,6 +438,24 @@ export function Transport() {
             <Plus className="h-4 w-4 mr-2" />
             Add Route
           </Button>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <FileText className="h-4 w-4 mr-2" />
+                Transport Reports
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-3xl">
+              <DialogHeader>
+                <DialogTitle>Transport Reports</DialogTitle>
+              </DialogHeader>
+              <ReportExporter 
+                data={allRoutes} 
+                title="Transport Reports" 
+                type="transport"
+              />
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
@@ -240,10 +516,17 @@ export function Transport() {
           <TabsTrigger value="tracking">Live Tracking</TabsTrigger>
           <TabsTrigger value="events">Transport Events</TabsTrigger>
           <TabsTrigger value="safety">Safety & Alerts</TabsTrigger>
+
+          <div className="flex space-x-2 ml-auto">
+            <Button onClick={() => setShowReportExporter(true)} variant="outline">
+              <FileText className="h-4 w-4 mr-2" />
+              All Reports
+            </Button>
+          </div>
         </TabsList>
 
         <TabsContent value="routes" className="space-y-4">
-          {mockTransportRoutes.map((route) => (
+          {allRoutes.map((route) => (
             <RouteCard key={route.id} route={route} />
           ))}
           
@@ -254,7 +537,7 @@ export function Transport() {
               <p className="text-gray-600 mb-4">
                 Create optimized routes with stops and schedules
               </p>
-              <Button>
+              <Button onClick={handleAddRoute}>
                 <Plus className="h-4 w-4 mr-2" />
                 Create Route
               </Button>
@@ -348,6 +631,12 @@ export function Transport() {
               <CardHeader>
                 <CardTitle>Boarding Events</CardTitle>
               </CardHeader>
+              <div className="flex space-x-2 mb-4">
+                <Button onClick={handleAddEvent} size="sm">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Log Event
+                </Button>
+              </div>
               <CardContent>
                 <div className="space-y-3">
                   {mockEvents.filter(e => e.type === 'board').map((event) => (
@@ -355,6 +644,12 @@ export function Transport() {
                   ))}
                 </div>
               </CardContent>
+              <div className="p-4 border-t">
+                <Button variant="outline" className="w-full">
+                  <Eye className="h-4 w-4 mr-2" />
+                  View All Events
+                </Button>
+              </div>
             </Card>
 
             <Card>
@@ -532,6 +827,92 @@ export function Transport() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Event Form Dialog */}
+      <Dialog open={showEventForm} onOpenChange={setShowEventForm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{selectedEvent ? 'Edit Event' : 'Log Transport Event'}</DialogTitle>
+          </DialogHeader>
+          <TransportEventForm 
+            event={selectedEvent}
+            onSave={handleSaveEvent}
+            onCancel={() => setShowEventForm(false)}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Report Exporter Dialog */}
+      <Dialog open={showReportExporter} onOpenChange={setShowReportExporter}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Transport Reports</DialogTitle>
+          </DialogHeader>
+          <ReportExporter 
+            data={allRoutes} 
+            title="Transport Reports" 
+            type="transport"
+            onClose={() => setShowReportExporter(false)}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
+  );
+}
+
+const TransportEventForm = ({ event, onSave, onCancel }: { event: any; onSave: (data: any) => void; onCancel: () => void }) => {
+  const [formData, setFormData] = useState({
+    learner_id: event?.learner_id || '',
+    route_id: event?.route_id || '',
+    stop_id: event?.stop_id || '',
+    type: event?.type || 'board',
+    method: event?.method || 'manual'
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSave(formData);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label>Event Type</Label>
+          <Select value={formData.type} onValueChange={(value) => setFormData(prev => ({ ...prev, type: value }))}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="board">Board Bus</SelectItem>
+              <SelectItem value="alight">Alight Bus</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label>Method</Label>
+          <Select value={formData.method} onValueChange={(value) => setFormData(prev => ({ ...prev, method: value }))}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="qr">QR Code</SelectItem>
+              <SelectItem value="nfc">NFC Tap</SelectItem>
+              <SelectItem value="manual">Manual Entry</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="flex space-x-2">
+        <Button type="submit">
+          <Save className="h-4 w-4 mr-2" />
+          Log Event
+        </Button>
+        <Button type="button" variant="outline" onClick={onCancel}>
+          Cancel
+        </Button>
+      </div>
+    </form>
   );
 }

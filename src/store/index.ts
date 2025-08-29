@@ -303,3 +303,265 @@ export const useReports = create<ReportsState>((set) => ({
   setLoading: (loading) => set({ isLoading: loading }),
   setError: (error) => set({ error }),
 }))
+
+// Staff Store
+interface StaffState {
+  staff: any[]
+  selectedStaff: any | null
+  isLoading: boolean
+  error: string | null
+  addStaff: (staff: any) => void
+  updateStaff: (id: string, updates: any) => void
+  deleteStaff: (id: string) => void
+  setSelectedStaff: (staff: any) => void
+  setLoading: (loading: boolean) => void
+  setError: (error: string | null) => void
+}
+
+export const useStaff = create<StaffState>((set) => ({
+  staff: [],
+  selectedStaff: null,
+  isLoading: false,
+  error: null,
+  addStaff: (staff) => set((state) => ({ 
+    staff: [...state.staff, { ...staff, id: Date.now().toString() }] 
+  })),
+  updateStaff: (id, updates) => set((state) => ({
+    staff: state.staff.map(s => s.id === id ? { ...s, ...updates } : s)
+  })),
+  deleteStaff: (id) => set((state) => ({
+    staff: state.staff.filter(s => s.id !== id)
+  })),
+  setSelectedStaff: (staff) => set({ selectedStaff: staff }),
+  setLoading: (loading) => set({ isLoading: loading }),
+  setError: (error) => set({ error }),
+}))
+
+// Timetable Store
+interface TimetableState {
+  lessons: any[]
+  selectedLesson: any | null
+  isLoading: boolean
+  error: string | null
+  addLesson: (lesson: any) => void
+  updateLesson: (id: string, updates: any) => void
+  deleteLesson: (id: string) => void
+  setSelectedLesson: (lesson: any) => void
+  setLoading: (loading: boolean) => void
+  setError: (error: string | null) => void
+}
+
+export const useTimetable = create<TimetableState>((set) => ({
+  lessons: [],
+  selectedLesson: null,
+  isLoading: false,
+  error: null,
+  addLesson: (lesson) => set((state) => ({ 
+    lessons: [...state.lessons, { ...lesson, id: Date.now().toString() }] 
+  })),
+  updateLesson: (id, updates) => set((state) => ({
+    lessons: state.lessons.map(l => l.id === id ? { ...l, ...updates } : l)
+  })),
+  deleteLesson: (id) => set((state) => ({
+    lessons: state.lessons.filter(l => l.id !== id)
+  })),
+  setSelectedLesson: (lesson) => set({ selectedLesson: lesson }),
+  setLoading: (loading) => set({ isLoading: loading }),
+  setError: (error) => set({ error }),
+}))
+
+// Welfare Store
+interface WelfareState {
+  cases: any[]
+  snePlans: any[]
+  selectedCase: any | null
+  selectedSNEPlan: any | null
+  isLoading: boolean
+  error: string | null
+  addCase: (welfareCase: any) => void
+  updateCase: (id: string, updates: any) => void
+  deleteCase: (id: string) => void
+  addSNEPlan: (plan: any) => void
+  updateSNEPlan: (id: string, updates: any) => void
+  deleteSNEPlan: (id: string) => void
+  setSelectedCase: (welfareCase: any) => void
+  setSelectedSNEPlan: (plan: any) => void
+  setLoading: (loading: boolean) => void
+  setError: (error: string | null) => void
+}
+
+export const useWelfare = create<WelfareState>((set) => ({
+  cases: [],
+  snePlans: [],
+  selectedCase: null,
+  selectedSNEPlan: null,
+  isLoading: false,
+  error: null,
+  addCase: (welfareCase) => set((state) => ({ 
+    cases: [...state.cases, { ...welfareCase, id: Date.now().toString() }] 
+  })),
+  updateCase: (id, updates) => set((state) => ({
+    cases: state.cases.map(c => c.id === id ? { ...c, ...updates } : c)
+  })),
+  deleteCase: (id) => set((state) => ({
+    cases: state.cases.filter(c => c.id !== id)
+  })),
+  addSNEPlan: (plan) => set((state) => ({ 
+    snePlans: [...state.snePlans, { ...plan, id: Date.now().toString() }] 
+  })),
+  updateSNEPlan: (id, updates) => set((state) => ({
+    snePlans: state.snePlans.map(p => p.id === id ? { ...p, ...updates } : p)
+  })),
+  deleteSNEPlan: (id) => set((state) => ({
+    snePlans: state.snePlans.filter(p => p.id !== id)
+  })),
+  setSelectedCase: (welfareCase) => set({ selectedCase: welfareCase }),
+  setSelectedSNEPlan: (plan) => set({ selectedSNEPlan: plan }),
+  setLoading: (loading) => set({ isLoading: loading }),
+  setError: (error) => set({ error }),
+}))
+
+// Communications Store
+interface CommunicationsState {
+  messages: any[]
+  templates: any[]
+  selectedMessage: any | null
+  selectedTemplate: any | null
+  isLoading: boolean
+  error: string | null
+  addMessage: (message: any) => void
+  updateMessage: (id: string, updates: any) => void
+  deleteMessage: (id: string) => void
+  addTemplate: (template: any) => void
+  updateTemplate: (id: string, updates: any) => void
+  deleteTemplate: (id: string) => void
+  setSelectedMessage: (message: any) => void
+  setSelectedTemplate: (template: any) => void
+  setLoading: (loading: boolean) => void
+  setError: (error: string | null) => void
+}
+
+export const useCommunications = create<CommunicationsState>((set) => ({
+  messages: [],
+  templates: [],
+  selectedMessage: null,
+  selectedTemplate: null,
+  isLoading: false,
+  error: null,
+  addMessage: (message) => set((state) => ({ 
+    messages: [...state.messages, { ...message, id: Date.now().toString() }] 
+  })),
+  updateMessage: (id, updates) => set((state) => ({
+    messages: state.messages.map(m => m.id === id ? { ...m, ...updates } : m)
+  })),
+  deleteMessage: (id) => set((state) => ({
+    messages: state.messages.filter(m => m.id !== id)
+  })),
+  addTemplate: (template) => set((state) => ({ 
+    templates: [...state.templates, { ...template, id: Date.now().toString() }] 
+  })),
+  updateTemplate: (id, updates) => set((state) => ({
+    templates: state.templates.map(t => t.id === id ? { ...t, ...updates } : t)
+  })),
+  deleteTemplate: (id) => set((state) => ({
+    templates: state.templates.filter(t => t.id !== id)
+  })),
+  setSelectedMessage: (message) => set({ selectedMessage: message }),
+  setSelectedTemplate: (template) => set({ selectedTemplate: template }),
+  setLoading: (loading) => set({ isLoading: loading }),
+  setError: (error) => set({ error }),
+}))
+
+// Library Store
+interface LibraryState {
+  books: any[]
+  issues: any[]
+  selectedBook: any | null
+  isLoading: boolean
+  error: string | null
+  addBook: (book: any) => void
+  updateBook: (id: string, updates: any) => void
+  deleteBook: (id: string) => void
+  issueBook: (issueData: any) => void
+  returnBook: (issueId: string) => void
+  setSelectedBook: (book: any) => void
+  setLoading: (loading: boolean) => void
+  setError: (error: string | null) => void
+}
+
+export const useLibrary = create<LibraryState>((set) => ({
+  books: [],
+  issues: [],
+  selectedBook: null,
+  isLoading: false,
+  error: null,
+  addBook: (book) => set((state) => ({ 
+    books: [...state.books, { ...book, id: Date.now().toString() }] 
+  })),
+  updateBook: (id, updates) => set((state) => ({
+    books: state.books.map(b => b.id === id ? { ...b, ...updates } : b)
+  })),
+  deleteBook: (id) => set((state) => ({
+    books: state.books.filter(b => b.id !== id)
+  })),
+  issueBook: (issueData) => set((state) => ({ 
+    issues: [...state.issues, { 
+      ...issueData, 
+      id: Date.now().toString(),
+      issued_date: new Date().toISOString(),
+      status: 'issued',
+      issued_by: 'current-user'
+    }] 
+  })),
+  returnBook: (issueId) => set((state) => ({
+    issues: state.issues.map(i => 
+      i.id === issueId ? { ...i, status: 'returned', returned_date: new Date().toISOString() } : i
+    )
+  })),
+  setSelectedBook: (book) => set({ selectedBook: book }),
+  setLoading: (loading) => set({ isLoading: loading }),
+  setError: (error) => set({ error }),
+}))
+
+// Inventory Store
+interface InventoryState {
+  assets: any[]
+  maintenance: any[]
+  selectedAsset: any | null
+  isLoading: boolean
+  error: string | null
+  addAsset: (asset: any) => void
+  updateAsset: (id: string, updates: any) => void
+  deleteAsset: (id: string) => void
+  addMaintenance: (maintenance: any) => void
+  updateMaintenance: (id: string, updates: any) => void
+  setSelectedAsset: (asset: any) => void
+  setLoading: (loading: boolean) => void
+  setError: (error: string | null) => void
+}
+
+export const useInventory = create<InventoryState>((set) => ({
+  assets: [],
+  maintenance: [],
+  selectedAsset: null,
+  isLoading: false,
+  error: null,
+  addAsset: (asset) => set((state) => ({ 
+    assets: [...state.assets, { ...asset, id: Date.now().toString() }] 
+  })),
+  updateAsset: (id, updates) => set((state) => ({
+    assets: state.assets.map(a => a.id === id ? { ...a, ...updates } : a)
+  })),
+  deleteAsset: (id) => set((state) => ({
+    assets: state.assets.filter(a => a.id !== id)
+  })),
+  addMaintenance: (maintenance) => set((state) => ({ 
+    maintenance: [...state.maintenance, { ...maintenance, id: Date.now().toString() }] 
+  })),
+  updateMaintenance: (id, updates) => set((state) => ({
+    maintenance: state.maintenance.map(m => m.id === id ? { ...m, ...updates } : m)
+  })),
+  setSelectedAsset: (asset) => set({ selectedAsset: asset }),
+  setLoading: (loading) => set({ isLoading: loading }),
+  setError: (error) => set({ error }),
+}))

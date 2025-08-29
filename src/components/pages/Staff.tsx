@@ -8,11 +8,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Progress } from '@/components/ui/progress';
 import { mockTeachers, mockSubjects } from '@/data/mock-data';
 import { formatDate, generateId } from '@/lib/utils';
 import { ReportExporter } from '@/components/features/ReportExporter';
+import { useStaff } from '@/store';
 import { 
   Users, 
   GraduationCap, 
@@ -41,7 +41,11 @@ export function Staff() {
   const [showTeacherForm, setShowTeacherForm] = useState(false);
   const [selectedTeacher, setSelectedTeacher] = useState<any>(null);
   const [showTPADBuilder, setShowTPADBuilder] = useState(false);
-  const [showExporter, setShowExporter] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [teacherToDelete, setTeacherToDelete] = useState<any>(null);
+  const [showReportExporter, setShowReportExporter] = useState(false);
+
+  const { staff, addStaff, updateStaff, deleteStaff } = useStaff();
 
   const mockStaff = [
     ...mockTeachers,
@@ -85,6 +89,8 @@ export function Staff() {
     }
   ];
 
+  const allStaff = staff.length > 0 ? staff : mockStaff;
+
   const mockTPADData = [
     {
       id: generateId(),
@@ -99,6 +105,38 @@ export function Staff() {
       due_date: '2024-04-15'
     }
   ];
+
+  const handleAddTeacher = () => {
+    setSelectedTeacher(null);
+    setShowTeacherForm(true);
+  };
+
+  const handleEditTeacher = (teacher: any) => {
+    setSelectedTeacher(teacher);
+    setShowTeacherForm(true);
+  };
+
+  const handleSaveTeacher = (teacherData: any) => {
+    if (selectedTeacher) {
+      updateStaff(selectedTeacher.id, teacherData);
+    } else {
+      addStaff(teacherData);
+    }
+    setShowTeacherForm(false);
+  };
+
+  const handleDeleteTeacher = (teacher: any) => {
+    setTeacherToDelete(teacher);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDelete = () => {
+    if (teacherToDelete) {
+      deleteStaff(teacherToDelete.id);
+      setShowDeleteDialog(false);
+      setTeacherToDelete(null);
+    }
+  };
 
   const TeacherCard = ({ teacher }: { teacher: any }) => {
     const teacherSubjects = teacher.subjects?.map((subId: string) => 
@@ -159,9 +197,42 @@ export function Staff() {
                 <Edit className="h-4 w-4 mr-1" />
                 Edit
               </Button>
-              <Button variant="outline" size="sm">
-                <FileText className="h-4 w-4 mr-1" />
-                TPAD
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Download className="h-4 w-4 mr-1" />
+                    Export
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl">
+                  <ReportExporter 
+                    data={teacher} 
+                    title={`${teacher.name} Profile`} 
+                    type="privacy"
+                  />
+                </DialogContent>
+              </Dialog>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <FileText className="h-4 w-4 mr-1" />
+                    TPAD
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-3xl">
+                  <DialogHeader>
+                    <DialogTitle>TPAD Portfolio - {teacher.name}</DialogTitle>
+                  </DialogHeader>
+                  <TPADBuilder teacher={teacher} />
+                </DialogContent>
+              </Dialog>
+              <Button variant="outline" size="sm" onClick={() => handleDeleteTeacher(teacher)}>
+                <Trash2 className="h-4 w-4 mr-1" />
+                Delete
+              </Button>
+              <Button size="sm">
+                <Award className="h-4 w-4 mr-1" />
+                Performance
               </Button>
             </div>
           </div>
@@ -223,14 +294,42 @@ export function Staff() {
         </div>
 
         <div className="flex space-x-2">
-          <Button className="flex-1">
-            <FileText className="h-4 w-4 mr-2" />
-            Generate TPAD Bundle
-          </Button>
-          <Button variant="outline" className="flex-1">
-            <Download className="h-4 w-4 mr-2" />
-            Export Profile
-          </Button>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button className="flex-1">
+                <FileText className="h-4 w-4 mr-2" />
+                Generate TPAD Bundle
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Export TPAD Bundle</DialogTitle>
+              </DialogHeader>
+              <ReportExporter 
+                data={teacher} 
+                title={`${teacher.name} TPAD Bundle`} 
+                type="privacy"
+              />
+            </DialogContent>
+          </Dialog>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="flex-1">
+                <Download className="h-4 w-4 mr-2" />
+                Export Profile
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Export Staff Profile</DialogTitle>
+              </DialogHeader>
+              <ReportExporter 
+                data={teacher} 
+                title={`${teacher.name} Profile`} 
+                type="privacy"
+              />
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
     );
@@ -245,13 +344,42 @@ export function Staff() {
       role: selectedTeacher?.role || 'teacher',
       subjects: selectedTeacher?.subjects || [],
       employment_date: selectedTeacher?.employment_date || '',
-      status: selectedTeacher?.status || 'active'
+      status: selectedTeacher?.status || 'active',
+      qualifications: selectedTeacher?.qualifications || []
     });
 
     const handleSubmit = (e: React.FormEvent) => {
       e.preventDefault();
-      console.log('Saving teacher:', formData);
-      setShowTeacherForm(false);
+      handleSaveTeacher(formData);
+    };
+
+    const addQualification = () => {
+      const newQual = {
+        id: Date.now().toString(),
+        title: '',
+        institution: '',
+        year: new Date().getFullYear()
+      };
+      setFormData(prev => ({ 
+        ...prev, 
+        qualifications: [...prev.qualifications, newQual] 
+      }));
+    };
+
+    const removeQualification = (index: number) => {
+      setFormData(prev => ({
+        ...prev,
+        qualifications: prev.qualifications.filter((_: any, i: number) => i !== index)
+      }));
+    };
+
+    const updateQualification = (index: number, field: string, value: any) => {
+      setFormData(prev => ({
+        ...prev,
+        qualifications: prev.qualifications.map((qual: any, i: number) =>
+          i === index ? { ...qual, [field]: value } : qual
+        )
+      }));
     };
 
     return (
@@ -349,6 +477,63 @@ export function Staff() {
           </div>
         </div>
 
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <Label>Qualifications</Label>
+            <Button type="button" onClick={addQualification} size="sm">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Qualification
+            </Button>
+          </div>
+          
+          <div className="space-y-4">
+            {formData.qualifications.map((qual: any, index: number) => (
+              <div key={index} className="p-4 border rounded-lg space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">Qualification {index + 1}</span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => removeQualification(index)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label>Title</Label>
+                    <Input
+                      value={qual.title}
+                      onChange={(e) => updateQualification(index, 'title', e.target.value)}
+                      placeholder="Qualification title"
+                    />
+                  </div>
+                  <div>
+                    <Label>Institution</Label>
+                    <Input
+                      value={qual.institution}
+                      onChange={(e) => updateQualification(index, 'institution', e.target.value)}
+                      placeholder="Institution name"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label>Year</Label>
+                  <Input
+                    type="number"
+                    value={qual.year}
+                    onChange={(e) => updateQualification(index, 'year', parseInt(e.target.value))}
+                    min="1980"
+                    max={new Date().getFullYear()}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
         <div className="flex space-x-2">
           <Button type="submit">
             <Save className="h-4 w-4 mr-2" />
@@ -360,11 +545,6 @@ export function Staff() {
         </div>
       </form>
     );
-  };
-
-  const handleEditTeacher = (teacher: any) => {
-    setSelectedTeacher(teacher);
-    setShowTeacherForm(true);
   };
 
   const TPADBuilder = ({ teacher }: { teacher: any }) => {
@@ -440,10 +620,24 @@ export function Staff() {
         </div>
 
         <div className="flex space-x-2">
-          <Button className="flex-1">
-            <Download className="h-4 w-4 mr-2" />
-            Generate TPAD Bundle
-          </Button>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button className="flex-1">
+                <Download className="h-4 w-4 mr-2" />
+                Generate TPAD Bundle
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Export TPAD Bundle</DialogTitle>
+              </DialogHeader>
+              <ReportExporter 
+                data={tpadData} 
+                title={`${teacher.name} TPAD Bundle`} 
+                type="privacy"
+              />
+            </DialogContent>
+          </Dialog>
           <Button variant="outline" className="flex-1">
             <FileText className="h-4 w-4 mr-2" />
             View Evidence
@@ -462,16 +656,38 @@ export function Staff() {
         </div>
         <div className="flex items-center space-x-3">
           <Badge variant="secondary" className="bg-blue-50 text-blue-700">
-            {mockStaff.length} Staff Members
+            {allStaff.length} Staff Members
           </Badge>
-          <Button onClick={() => setShowTeacherForm(true)}>
+          <Button onClick={handleAddTeacher}>
             <Plus className="h-4 w-4 mr-2" />
             Add Staff
           </Button>
-          <Button variant="outline" onClick={() => setShowExporter(true)}>
-            <Download className="h-4 w-4 mr-2" />
-            Export Reports
+          <Button onClick={() => setShowReportExporter(true)} variant="outline">
+            <FileText className="h-4 w-4 mr-2" />
+            Staff Reports
           </Button>
+          <Button variant="outline">
+            <Download className="h-4 w-4 mr-2" />
+            Export All
+          </Button>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <Download className="h-4 w-4 mr-2" />
+                Export Reports
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-3xl">
+              <DialogHeader>
+                <DialogTitle>Staff Reports</DialogTitle>
+              </DialogHeader>
+              <ReportExporter 
+                data={allStaff} 
+                title="Staff Reports" 
+                type="privacy"
+              />
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
@@ -482,7 +698,7 @@ export function Staff() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Total Staff</p>
-                <p className="text-2xl font-bold text-blue-600">{mockStaff.length}</p>
+                <p className="text-2xl font-bold text-blue-600">{allStaff.length}</p>
               </div>
               <Users className="h-8 w-8 text-blue-500" />
             </div>
@@ -494,7 +710,7 @@ export function Staff() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Teachers</p>
-                <p className="text-2xl font-bold text-green-600">{mockStaff.filter(s => s.role?.includes('teacher')).length}</p>
+                <p className="text-2xl font-bold text-green-600">{allStaff.filter(s => s.role?.includes('teacher')).length}</p>
               </div>
               <GraduationCap className="h-8 w-8 text-green-500" />
             </div>
@@ -528,7 +744,7 @@ export function Staff() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
-          <TabsTrigger value="teachers">Teachers ({mockStaff.length})</TabsTrigger>
+          <TabsTrigger value="teachers">Teachers ({allStaff.length})</TabsTrigger>
           <TabsTrigger value="tpad">TPAD ({mockTPADData.length})</TabsTrigger>
           <TabsTrigger value="workload">Workload Analysis</TabsTrigger>
           <TabsTrigger value="reports">Reports</TabsTrigger>
@@ -551,13 +767,13 @@ export function Staff() {
             </Button>
           </div>
 
-          {mockStaff.map((teacher) => (
+          {allStaff.map((teacher) => (
             <TeacherCard key={teacher.id} teacher={teacher} />
           ))}
         </TabsContent>
 
         <TabsContent value="tpad" className="space-y-4">
-          {mockStaff.filter(s => s.role?.includes('teacher')).map((teacher) => (
+          {allStaff.filter(s => s.role?.includes('teacher')).map((teacher) => (
             <Card key={teacher.id}>
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
@@ -577,10 +793,24 @@ export function Staff() {
                         <TPADBuilder teacher={teacher} />
                       </DialogContent>
                     </Dialog>
-                    <Button size="sm">
-                      <Download className="h-4 w-4 mr-1" />
-                      Export Bundle
-                    </Button>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button size="sm">
+                          <Download className="h-4 w-4 mr-1" />
+                          Export Bundle
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-2xl">
+                        <DialogHeader>
+                          <DialogTitle>Export TPAD Bundle</DialogTitle>
+                        </DialogHeader>
+                        <ReportExporter 
+                          data={teacher} 
+                          title={`${teacher.name} TPAD Bundle`} 
+                          type="privacy"
+                        />
+                      </DialogContent>
+                    </Dialog>
                   </div>
                 </CardTitle>
               </CardHeader>
@@ -615,7 +845,7 @@ export function Staff() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {mockStaff.filter(s => s.role?.includes('teacher')).map((teacher) => {
+                {allStaff.filter(s => s.role?.includes('teacher')).map((teacher) => {
                   const workload = Math.floor(Math.random() * 10) + 15;
                   const maxLoad = 25;
                   const percentage = (workload / maxLoad) * 100;
@@ -655,20 +885,34 @@ export function Staff() {
               <CardContent>
                 <div className="space-y-3">
                   {[
-                    { name: 'Staff Directory', description: 'Complete staff listing with contacts' },
-                    { name: 'Teaching Loads', description: 'Workload distribution analysis' },
-                    { name: 'Qualifications Summary', description: 'Staff qualifications and certifications' },
-                    { name: 'Leave Records', description: 'Staff attendance and leave tracking' }
+                    { name: 'Staff Directory', description: 'Complete staff listing with contacts', data: allStaff },
+                    { name: 'Teaching Loads', description: 'Workload distribution analysis', data: allStaff },
+                    { name: 'Qualifications Summary', description: 'Staff qualifications and certifications', data: allStaff },
+                    { name: 'Leave Records', description: 'Staff attendance and leave tracking', data: allStaff }
                   ].map((report, index) => (
                     <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
                       <div>
                         <p className="font-medium text-gray-900">{report.name}</p>
                         <p className="text-sm text-gray-600">{report.description}</p>
                       </div>
-                      <Button variant="outline" size="sm">
-                        <Download className="h-4 w-4 mr-1" />
-                        Generate
-                      </Button>
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" size="sm">
+                            <Download className="h-4 w-4 mr-1" />
+                            Generate
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-2xl">
+                          <DialogHeader>
+                            <DialogTitle>Export {report.name}</DialogTitle>
+                          </DialogHeader>
+                          <ReportExporter 
+                            data={report.data} 
+                            title={report.name} 
+                            type="privacy"
+                          />
+                        </DialogContent>
+                      </Dialog>
                     </div>
                   ))}
                 </div>
@@ -682,20 +926,34 @@ export function Staff() {
               <CardContent>
                 <div className="space-y-3">
                   {[
-                    { name: 'Individual TPAD Bundle', description: 'Complete evidence package per teacher' },
-                    { name: 'School TPAD Summary', description: 'Overall TPAD completion status' },
-                    { name: 'Professional Development Log', description: 'Training and development records' },
-                    { name: 'Performance Analytics', description: 'Teaching effectiveness metrics' }
+                    { name: 'Individual TPAD Bundle', description: 'Complete evidence package per teacher', data: mockTPADData },
+                    { name: 'School TPAD Summary', description: 'Overall TPAD completion status', data: mockTPADData },
+                    { name: 'Professional Development Log', description: 'Training and development records', data: allStaff },
+                    { name: 'Performance Analytics', description: 'Teaching effectiveness metrics', data: mockTPADData }
                   ].map((report, index) => (
                     <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
                       <div>
                         <p className="font-medium text-gray-900">{report.name}</p>
                         <p className="text-sm text-gray-600">{report.description}</p>
                       </div>
-                      <Button variant="outline" size="sm">
-                        <Download className="h-4 w-4 mr-1" />
-                        Generate
-                      </Button>
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" size="sm">
+                            <Download className="h-4 w-4 mr-1" />
+                            Generate
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-2xl">
+                          <DialogHeader>
+                            <DialogTitle>Export {report.name}</DialogTitle>
+                          </DialogHeader>
+                          <ReportExporter 
+                            data={report.data} 
+                            title={report.name} 
+                            type="privacy"
+                          />
+                        </DialogContent>
+                      </Dialog>
                     </div>
                   ))}
                 </div>
@@ -707,7 +965,7 @@ export function Staff() {
 
       {/* Teacher Form Dialog */}
       <Dialog open={showTeacherForm} onOpenChange={setShowTeacherForm}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{selectedTeacher ? 'Edit Staff Member' : 'Add New Staff Member'}</DialogTitle>
           </DialogHeader>
@@ -715,17 +973,34 @@ export function Staff() {
         </DialogContent>
       </Dialog>
 
-      {/* Report Exporter Dialog */}
-      <Dialog open={showExporter} onOpenChange={setShowExporter}>
-        <DialogContent className="max-w-2xl">
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle>Export Staff Reports</DialogTitle>
+            <DialogTitle>Delete Staff Member</DialogTitle>
           </DialogHeader>
-          <ReportExporter 
-            data={mockStaff} 
-            title="Staff Reports" 
-            type="attendance"
-          />
+          <div className="space-y-4">
+            <p>Are you sure you want to delete <strong>{teacherToDelete?.name}</strong>?</p>
+            <p className="text-sm text-gray-600">This action cannot be undone.</p>
+            <div className="flex space-x-2">
+              <Button variant="destructive" onClick={confirmDelete}>
+                Delete Staff Member
+              </Button>
+              <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Report Exporter Dialog */}
+      <Dialog open={showReportExporter} onOpenChange={setShowReportExporter}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Staff Reports</DialogTitle>
+          </DialogHeader>
+          <ReportExporter data={allStaff} title="Staff Reports" type="privacy" />
         </DialogContent>
       </Dialog>
     </div>

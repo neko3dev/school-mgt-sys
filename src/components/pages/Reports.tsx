@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Progress } from '@/components/ui/progress';
 import { useReports } from '@/store';
 import { formatDate, generateId } from '@/lib/utils';
+import { ReportExporter } from '@/components/features/ReportExporter';
 import { 
   FileText, 
   Download, 
@@ -173,6 +174,24 @@ export function Reports() {
                     <Download className="h-4 w-4 mr-1" />
                     Generate
                   </Button>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        <Eye className="h-4 w-4 mr-1" />
+                        Export
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-2xl">
+                      <DialogHeader>
+                        <DialogTitle>Export {report.name}</DialogTitle>
+                      </DialogHeader>
+                      <ReportExporter 
+                        data={data || []} 
+                        title={report.name} 
+                        type={category.id as any}
+                      />
+                    </DialogContent>
+                  </Dialog>
                 </div>
               </div>
             ))}

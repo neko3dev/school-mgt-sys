@@ -10,6 +10,7 @@ import { mockFeeInvoices, mockLearners } from '@/data/mock-data';
 import { useFinance } from '@/store';
 import { InvoiceForm } from '@/components/forms/InvoiceForm';
 import { formatCurrency, formatDate } from '@/lib/utils';
+import { ReportExporter } from '@/components/features/ReportExporter';
 import { 
   CreditCard, 
   Plus, 
@@ -137,6 +138,25 @@ export function Finance() {
                   <Edit className="h-4 w-4 mr-1" />
                   Edit
                 </Button>
+
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      <Download className="h-4 w-4 mr-1" />
+                      Export
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                      <DialogTitle>Export Invoice</DialogTitle>
+                    </DialogHeader>
+                    <ReportExporter 
+                      data={invoice} 
+                      title={`Invoice ${invoice.id}`} 
+                      type="finance"
+                    />
+                  </DialogContent>
+                </Dialog>
 
                 <Button variant="outline" size="sm" onClick={() => handleDeleteInvoice(invoice)}>
                   <Trash2 className="h-4 w-4 mr-1" />
@@ -357,6 +377,24 @@ export function Finance() {
             <Plus className="h-4 w-4 mr-2" />
             Create Invoice
           </Button>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <FileText className="h-4 w-4 mr-2" />
+                Financial Reports
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-3xl">
+              <DialogHeader>
+                <DialogTitle>Financial Reports</DialogTitle>
+              </DialogHeader>
+              <ReportExporter 
+                data={allInvoices} 
+                title="Financial Reports" 
+                type="finance"
+              />
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
