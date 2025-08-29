@@ -345,6 +345,10 @@ export function Privacy() {
             <Plus className="h-4 w-4 mr-2" />
             New Processing Record
           </Button>
+          <Button variant="outline">
+            <Download className="h-4 w-4 mr-2" />
+            Export Compliance Pack
+          </Button>
         </div>
       </div>
 
@@ -532,6 +536,10 @@ export function Privacy() {
             <Button>
               <Plus className="h-4 w-4 mr-2" />
               Log New Request
+            </Button>
+            <Button variant="outline">
+              <Download className="h-4 w-4 mr-2" />
+              Export Requests
             </Button>
           </div>
 

@@ -87,6 +87,14 @@ export function Transport() {
                 <Navigation className="h-4 w-4 mr-1" />
                 Track Live
               </Button>
+              <Button variant="outline" size="sm" onClick={() => handleEditRoute(route)}>
+                <Edit className="h-4 w-4 mr-1" />
+                Edit
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => handleDeleteRoute(route)}>
+                <Trash2 className="h-4 w-4 mr-1" />
+                Delete
+              </Button>
             </div>
           </div>
 
@@ -493,6 +501,37 @@ export function Transport() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Route Form Dialog */}
+      <Dialog open={showRouteForm} onOpenChange={setShowRouteForm}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{selectedRoute ? 'Edit Route' : 'Create New Route'}</DialogTitle>
+          </DialogHeader>
+          <RouteForm />
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Route</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p>Are you sure you want to delete <strong>{routeToDelete?.name}</strong>?</p>
+            <p className="text-sm text-gray-600">This action cannot be undone.</p>
+            <div className="flex space-x-2">
+              <Button variant="destructive" onClick={confirmDelete}>
+                Delete Route
+              </Button>
+              <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

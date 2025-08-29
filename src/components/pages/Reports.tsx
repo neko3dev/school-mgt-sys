@@ -3,9 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
+import { useReports } from '@/store';
 import { formatDate, generateId } from '@/lib/utils';
 import { 
   FileText, 
@@ -22,12 +25,18 @@ import {
   Users,
   CreditCard,
   GraduationCap,
-  Bus,
-  Shield
+  Shield,
+  Save,
+  Trash2,
+  Edit
 } from 'lucide-react';
 
 export function Reports() {
   const [activeTab, setActiveTab] = useState('overview');
+  const [showReportBuilder, setShowReportBuilder] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
+  
+  const { reports, templates, exportQueue, generateReport, saveTemplate, deleteTemplate } = useReports();
 
   const reportCategories = [
     {
@@ -160,7 +169,7 @@ export function Reports() {
                       <ReportBuilder report={report} />
                     </DialogContent>
                   </Dialog>
-                  <Button size="sm" className="flex-1">
+                  <Button size="sm" className="flex-1" onClick={() => generateReport({ report_type: report.name, format: 'pdf' })}>
                     <Download className="h-4 w-4 mr-1" />
                     Generate
                   </Button>
@@ -174,37 +183,85 @@ export function Reports() {
   };
 
   const ReportBuilder = ({ report }: { report: any }) => {
+    const [config, setConfig] = useState({
+      title: report?.name || '',
+      format: 'pdf',
+      academic_year: '2024',
+      term: '1',
+      grade: 'all',
+      include_photos: true,
+      include_branding: true,
+      include_qr: false
+    });
+
+    const handleGenerate = () => {
+      const reportConfig = {
+        ...config,
+        report_type: report.name,
+        created_by: 'current-user',
+        filters: {
+          academic_year: config.academic_year,
+          term: config.term,
+          grade: config.grade
+        }
+      };
+      generateReport(reportConfig);
+      setShowReportBuilder(false);
+    };
+
     return (
       <div className="space-y-6">
         <div className="grid grid-cols-2 gap-6">
           <div className="space-y-4">
             <div>
+              <Label htmlFor="title">Report Title</Label>
+              <Input
+                id="title"
+                value={config.title}
+                onChange={(e) => setConfig(prev => ({ ...prev, title: e.target.value }))}
+              />
+            </div>
+            <div>
               <label className="text-sm font-medium text-gray-600">Academic Year</label>
-              <select className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2">
-                <option>2024</option>
-                <option>2023</option>
-              </select>
+              <Select value={config.academic_year} onValueChange={(value) => setConfig(prev => ({ ...prev, academic_year: value }))}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="2024">2024</SelectItem>
+                  <SelectItem value="2023">2023</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             
             <div>
               <label className="text-sm font-medium text-gray-600">Term</label>
-              <select className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2">
-                <option>Current Term (Term 1)</option>
-                <option>Term 1</option>
-                <option>Term 2</option>
-                <option>Term 3</option>
-              </select>
+              <Select value={config.term} onValueChange={(value) => setConfig(prev => ({ ...prev, term: value }))}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">Term 1</SelectItem>
+                  <SelectItem value="2">Term 2</SelectItem>
+                  <SelectItem value="3">Term 3</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div>
               <label className="text-sm font-medium text-gray-600">Grade</label>
-              <select className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2">
-                <option>All Grades</option>
-                <option>Grade 1</option>
-                <option>Grade 2</option>
-                <option>Grade 3</option>
-                <option>Grade 4</option>
-              </select>
+              <Select value={config.grade} onValueChange={(value) => setConfig(prev => ({ ...prev, grade: value }))}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Grades</SelectItem>
+                  <SelectItem value="1">Grade 1</SelectItem>
+                  <SelectItem value="2">Grade 2</SelectItem>
+                  <SelectItem value="3">Grade 3</SelectItem>
+                  <SelectItem value="4">Grade 4</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
@@ -212,9 +269,15 @@ export function Reports() {
             <div>
               <label className="text-sm font-medium text-gray-600">Format</label>
               <div className="mt-2 space-y-2">
-                {report.format.map((fmt: string) => (
+                {['PDF', 'Excel', 'CSV'].map((fmt: string) => (
                   <label key={fmt} className="flex items-center space-x-2">
-                    <input type="radio" name="format" value={fmt} defaultChecked={fmt === 'PDF'} />
+                    <input 
+                      type="radio" 
+                      name="format" 
+                      value={fmt.toLowerCase()} 
+                      checked={config.format === fmt.toLowerCase()}
+                      onChange={(e) => setConfig(prev => ({ ...prev, format: e.target.value }))}
+                    />
                     <span className="text-sm">{fmt}</span>
                   </label>
                 ))}
@@ -225,15 +288,27 @@ export function Reports() {
               <label className="text-sm font-medium text-gray-600">Include</label>
               <div className="mt-2 space-y-2">
                 <label className="flex items-center space-x-2">
-                  <input type="checkbox" defaultChecked />
+                  <input 
+                    type="checkbox" 
+                    checked={config.include_photos}
+                    onChange={(e) => setConfig(prev => ({ ...prev, include_photos: e.target.checked }))}
+                  />
                   <span className="text-sm">Student photos</span>
                 </label>
                 <label className="flex items-center space-x-2">
-                  <input type="checkbox" defaultChecked />
+                  <input 
+                    type="checkbox" 
+                    checked={config.include_branding}
+                    onChange={(e) => setConfig(prev => ({ ...prev, include_branding: e.target.checked }))}
+                  />
                   <span className="text-sm">School branding</span>
                 </label>
                 <label className="flex items-center space-x-2">
-                  <input type="checkbox" />
+                  <input 
+                    type="checkbox" 
+                    checked={config.include_qr}
+                    onChange={(e) => setConfig(prev => ({ ...prev, include_qr: e.target.checked }))}
+                  />
                   <span className="text-sm">QR codes for verification</span>
                 </label>
               </div>
@@ -261,7 +336,7 @@ export function Reports() {
             <Eye className="h-4 w-4 mr-2" />
             Preview
           </Button>
-          <Button className="flex-1">
+          <Button className="flex-1" onClick={handleGenerate}>
             <Download className="h-4 w-4 mr-2" />
             Generate Report
           </Button>
@@ -428,7 +503,7 @@ export function Reports() {
           </div>
 
           <div className="space-y-4">
-            {recentExports.map((exportItem) => (
+            {exportQueue.map((exportItem) => (
               <ExportQueueItem key={exportItem.id} export={exportItem} />
             ))}
           </div>
@@ -548,6 +623,51 @@ export function Reports() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Report Builder Dialog */}
+      <Dialog open={showReportBuilder} onOpenChange={setShowReportBuilder}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Custom Report Builder</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Report Type</Label>
+                <Select>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select report type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="academic">Academic Report</SelectItem>
+                    <SelectItem value="financial">Financial Report</SelectItem>
+                    <SelectItem value="attendance">Attendance Report</SelectItem>
+                    <SelectItem value="transport">Transport Report</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Output Format</Label>
+                <Select>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select format" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pdf">PDF</SelectItem>
+                    <SelectItem value="xlsx">Excel</SelectItem>
+                    <SelectItem value="csv">CSV</SelectItem>
+                    <SelectItem value="json">JSON</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <Button onClick={() => generateReport({ type: 'custom', format: 'pdf' })}>
+              <Download className="h-4 w-4 mr-2" />
+              Generate Custom Report
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -2,9 +2,15 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Progress } from '@/components/ui/progress';
 import { mockAttendance, mockLearners, mockClassrooms } from '@/data/mock-data';
+import { useAttendance } from '@/store';
 import { formatDate } from '@/lib/utils';
 import { 
   Calendar, 
@@ -16,13 +22,28 @@ import {
   TrendingUp,
   Download,
   Plus,
-  Eye
+  Eye,
+  Edit,
+  Save,
+  FileText,
+  Filter
 } from 'lucide-react';
 
 export function Attendance() {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedClass, setSelectedClass] = useState('all');
   const [activeTab, setActiveTab] = useState('daily');
+  const [showMarkAttendance, setShowMarkAttendance] = useState(false);
+  const [showBulkMark, setShowBulkMark] = useState(false);
+  const [attendanceData, setAttendanceData] = useState<any>({});
+  const [reportConfig, setReportConfig] = useState({
+    format: 'pdf',
+    dateRange: 'today',
+    includeReasons: true,
+    groupByClass: true
+  });
+
+  const { attendance, addAttendanceRecord, updateAttendanceRecord, deleteAttendanceRecord } = useAttendance();
 
   const todayAttendance = mockAttendance.filter(a => a.date === selectedDate);
   const presentCount = todayAttendance.filter(a => a.status === 'present').length;
@@ -37,6 +58,178 @@ export function Attendance() {
 
   const getClassroom = (classroomId: string) => {
     return mockClassrooms.find(c => c.id === classroomId);
+  };
+
+  const handleMarkAttendance = (studentId: string, status: string, reason?: string) => {
+    const record = {
+      id: `att-${Date.now()}`,
+      date: selectedDate,
+      type: 'homeroom' as const,
+      learner_id: studentId,
+      status: status as any,
+      reason,
+      recorded_by: 'current-user',
+      recorded_at: new Date().toISOString()
+    };
+    addAttendanceRecord(record);
+  };
+
+  const handleBulkMarkAttendance = () => {
+    const students = mockLearners.filter(s => s.status === 'active');
+    students.forEach(student => {
+      const status = attendanceData[student.id] || 'present';
+      handleMarkAttendance(student.id, status);
+    });
+    setShowBulkMark(false);
+    setAttendanceData({});
+  };
+
+  const generateAttendanceReport = () => {
+    const reportData = {
+      title: `Attendance Report - ${formatDate(selectedDate)}`,
+      date: selectedDate,
+      format: reportConfig.format,
+      data: todayAttendance,
+      summary: {
+        total: totalStudents,
+        present: presentCount,
+        absent: absentCount,
+        late: lateCount,
+        rate: attendanceRate
+      }
+    };
+
+    // Simulate report generation
+    console.log('Generating attendance report:', reportData);
+    
+    // In a real system, this would call an API
+    setTimeout(() => {
+      const blob = new Blob([JSON.stringify(reportData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `attendance-report-${selectedDate}.${reportConfig.format}`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }, 1000);
+  };
+
+  const BulkAttendanceForm = () => {
+    const students = mockLearners.filter(s => s.status === 'active');
+    
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold">Mark Attendance - {formatDate(selectedDate)}</h3>
+          <div className="flex space-x-2">
+            <Button onClick={handleBulkMarkAttendance}>
+              <Save className="h-4 w-4 mr-2" />
+              Save All
+            </Button>
+            <Button variant="outline" onClick={() => setShowBulkMark(false)}>
+              Cancel
+            </Button>
+          </div>
+        </div>
+
+        <div className="space-y-4 max-h-96 overflow-y-auto">
+          {students.map(student => {
+            const classroom = getClassroom(student.classroom_id);
+            return (
+              <div key={student.id} className="flex items-center justify-between p-3 border rounded-lg">
+                <div>
+                  <p className="font-medium">{student.name}</p>
+                  <p className="text-sm text-gray-600">
+                    {student.admission_no} • Grade {classroom?.grade}{classroom?.stream}
+                  </p>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Select 
+                    value={attendanceData[student.id] || 'present'} 
+                    onValueChange={(value) => setAttendanceData(prev => ({ ...prev, [student.id]: value }))}
+                  >
+                    <SelectTrigger className="w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="present">Present</SelectItem>
+                      <SelectItem value="absent">Absent</SelectItem>
+                      <SelectItem value="late">Late</SelectItem>
+                      <SelectItem value="excused">Excused</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  const ReportGenerator = () => {
+    return (
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold">Generate Attendance Report</h3>
+        
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label>Report Format</Label>
+            <Select value={reportConfig.format} onValueChange={(value) => setReportConfig(prev => ({ ...prev, format: value }))}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="pdf">PDF Report</SelectItem>
+                <SelectItem value="xlsx">Excel Spreadsheet</SelectItem>
+                <SelectItem value="csv">CSV Data</SelectItem>
+                <SelectItem value="json">JSON Export</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div>
+            <Label>Date Range</Label>
+            <Select value={reportConfig.dateRange} onValueChange={(value) => setReportConfig(prev => ({ ...prev, dateRange: value }))}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="today">Today Only</SelectItem>
+                <SelectItem value="week">This Week</SelectItem>
+                <SelectItem value="month">This Month</SelectItem>
+                <SelectItem value="term">Current Term</SelectItem>
+                <SelectItem value="custom">Custom Range</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <label className="flex items-center space-x-2">
+            <input 
+              type="checkbox" 
+              checked={reportConfig.includeReasons}
+              onChange={(e) => setReportConfig(prev => ({ ...prev, includeReasons: e.target.checked }))}
+            />
+            <span className="text-sm">Include absence reasons</span>
+          </label>
+          <label className="flex items-center space-x-2">
+            <input 
+              type="checkbox" 
+              checked={reportConfig.groupByClass}
+              onChange={(e) => setReportConfig(prev => ({ ...prev, groupByClass: e.target.checked }))}
+            />
+            <span className="text-sm">Group by class</span>
+          </label>
+        </div>
+
+        <Button onClick={generateAttendanceReport} className="w-full">
+          <Download className="h-4 w-4 mr-2" />
+          Generate Report
+        </Button>
+      </div>
+    );
   };
 
   const AttendanceCard = ({ record }: { record: any }) => {
@@ -153,10 +346,24 @@ export function Attendance() {
           <Badge variant="secondary" className="bg-blue-50 text-blue-700">
             Today: {attendanceRate.toFixed(1)}% Present
           </Badge>
-          <Button>
+          <Button onClick={() => setShowBulkMark(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Mark Attendance
           </Button>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <FileText className="h-4 w-4 mr-2" />
+                Generate Report
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Attendance Report</DialogTitle>
+              </DialogHeader>
+              <ReportGenerator />
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
@@ -441,6 +648,16 @@ export function Attendance() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Bulk Mark Attendance Dialog */}
+      <Dialog open={showBulkMark} onOpenChange={setShowBulkMark}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Mark Class Attendance</DialogTitle>
+          </DialogHeader>
+          <BulkAttendanceForm />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
