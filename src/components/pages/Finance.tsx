@@ -37,8 +37,13 @@ export function Finance() {
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [invoiceToDelete, setInvoiceToDelete] = useState<any>(null);
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [invoiceForPayment, setInvoiceForPayment] = useState<any>(null);
+  const [showStatementDialog, setShowStatementDialog] = useState(false);
+  const [studentForStatement, setStudentForStatement] = useState<any>(null);
   
   const { invoices, addInvoice, updateInvoice, deleteInvoice } = useFinance();
+  const { generateReport } = useReports();
   
   // Use mock data initially, but allow for real CRUD operations
   const allInvoices = invoices.length > 0 ? invoices : mockFeeInvoices;
@@ -76,6 +81,36 @@ export function Finance() {
       setShowDeleteDialog(false);
       setInvoiceToDelete(null);
     }
+  };
+
+  const handleProcessPayment = (invoice: any) => {
+    setInvoiceForPayment(invoice);
+    setShowPaymentDialog(true);
+  };
+
+  const handleGenerateStatement = (invoice: any) => {
+    const student = mockLearners.find(s => s.id === invoice.learner_id);
+    generateReport({
+      type: 'fee_statement',
+      title: `Fee Statement - ${student?.name}`,
+      data: { invoice, student },
+      format: 'pdf'
+    });
+  };
+
+  const handleSendInvoice = (invoice: any) => {
+    const student = mockLearners.find(s => s.id === invoice.learner_id);
+    // Simulate sending invoice via SMS/Email
+    alert(`Invoice sent to ${student?.guardians?.[0]?.phone || 'parent'}`);
+  };
+
+  const handleBulkExport = () => {
+    generateReport({
+      type: 'fee_collection_summary',
+      title: 'Fee Collection Summary',
+      data: allInvoices,
+      format: 'xlsx'
+    });
   };
 
   const InvoiceCard = ({ invoice }: { invoice: any }) => {
@@ -139,6 +174,16 @@ export function Finance() {
                   Edit
                 </Button>
 
+                <Button variant="outline" size="sm" onClick={() => handleGenerateStatement(invoice)}>
+                  <Receipt className="h-4 w-4 mr-1" />
+                  Statement
+                </Button>
+
+                <Button variant="outline" size="sm" onClick={() => handleSendInvoice(invoice)}>
+                  <Send className="h-4 w-4 mr-1" />
+                  Send
+                </Button>
+
                 <Dialog>
                   <DialogTrigger asChild>
                     <Button variant="outline" size="sm">
@@ -166,7 +211,7 @@ export function Finance() {
                 {!isPaid && (
                   <Dialog>
                     <DialogTrigger asChild>
-                      <Button size="sm">
+                      <Button size="sm" onClick={() => handleProcessPayment(invoice)}>
                         <Smartphone className="h-4 w-4 mr-1" />
                         M-PESA
                       </Button>
@@ -376,6 +421,10 @@ export function Finance() {
           <Button onClick={handleAddInvoice}>
             <Plus className="h-4 w-4 mr-2" />
             Create Invoice
+          </Button>
+          <Button variant="outline" onClick={handleBulkExport}>
+            <Download className="h-4 w-4 mr-2" />
+            Export All
           </Button>
           <Dialog>
             <DialogTrigger asChild>
@@ -706,6 +755,28 @@ export function Finance() {
               </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Payment Processing Dialog */}
+      <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Process Payment</DialogTitle>
+          </DialogHeader>
+          {invoiceForPayment && (
+            <MPESAIntegration 
+              invoice={invoiceForPayment} 
+              onPaymentComplete={(payment) => {
+                // Update invoice balance
+                updateInvoice(invoiceForPayment.id, { 
+                  balance: 0, 
+                  status: 'paid' 
+                });
+                setShowPaymentDialog(false);
+              }}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </div>

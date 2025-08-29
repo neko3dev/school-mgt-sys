@@ -46,6 +46,7 @@ export function Welfare() {
   const [showSNEDetails, setShowSNEDetails] = useState(false);
 
   const { cases, snePlans, addCase, updateCase, deleteCase, addSNEPlan, updateSNEPlan, deleteSNEPlan } = useWelfare();
+  const { generateReport } = useReports();
 
   const mockWelfareCases = [
     {
@@ -180,6 +181,33 @@ export function Welfare() {
     setShowSNEDetails(true);
   };
 
+  const handleExportCase = (welfareCase: any) => {
+    generateReport({
+      type: 'welfare_case_report',
+      title: `Welfare Case - ${getStudent(welfareCase.learner_id)?.name}`,
+      data: welfareCase,
+      format: 'pdf'
+    });
+  };
+
+  const handleExportSNEPlan = (plan: any) => {
+    generateReport({
+      type: 'sne_plan_report',
+      title: `SNE Plan - ${getStudent(plan.learner_id)?.name}`,
+      data: plan,
+      format: 'pdf'
+    });
+  };
+
+  const handleGenerateWelfareReport = () => {
+    generateReport({
+      type: 'welfare_summary_report',
+      title: 'Welfare Summary Report',
+      data: allCases,
+      format: 'xlsx'
+    });
+  };
+
   const WelfareCaseCard = ({ welfareCase }: { welfareCase: any }) => {
     const student = getStudent(welfareCase.learner_id);
     
@@ -238,6 +266,10 @@ export function Welfare() {
                 <Button variant="outline" size="sm" onClick={() => handleEditCase(welfareCase)}>
                   <Edit className="h-4 w-4 mr-1" />
                   Edit
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => handleExportCase(welfareCase)}>
+                  <Download className="h-4 w-4 mr-1" />
+                  Export
                 </Button>
                 <Button variant="outline" size="sm" onClick={() => handleDeleteCase(welfareCase)}>
                   <Trash2 className="h-4 w-4 mr-1" />
@@ -314,6 +346,10 @@ export function Welfare() {
                 <Button variant="outline" size="sm" onClick={() => handleEditSNEPlan(plan)}>
                   <Edit className="h-4 w-4 mr-1" />
                   Edit
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => handleExportSNEPlan(plan)}>
+                  <Download className="h-4 w-4 mr-1" />
+                  Export
                 </Button>
                 <Button variant="outline" size="sm" onClick={() => handleDeleteSNEPlan(plan)}>
                   <Trash2 className="h-4 w-4 mr-1" />
@@ -613,6 +649,10 @@ export function Welfare() {
             <Plus className="h-4 w-4 mr-2" />
             New Case
           </Button>
+          <Button variant="outline" onClick={handleGenerateWelfareReport}>
+            <FileText className="h-4 w-4 mr-2" />
+            Welfare Summary
+          </Button>
           <Button onClick={() => setShowReportExporter(true)} variant="outline">
             <FileText className="h-4 w-4 mr-2" />
             Welfare Reports
@@ -782,6 +822,17 @@ export function Welfare() {
             <Button onClick={handleAddSNEPlan}>
               <Plus className="h-4 w-4 mr-2" />
               New SNE Plan
+            </Button>
+            <Button variant="outline" onClick={() => {
+              generateReport({
+                type: 'sne_summary_report',
+                title: 'SNE Summary Report',
+                data: allSNEPlans,
+                format: 'pdf'
+              });
+            }}>
+              <FileText className="h-4 w-4 mr-2" />
+              SNE Report
             </Button>
           </div>
 

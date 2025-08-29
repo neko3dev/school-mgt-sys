@@ -41,8 +41,12 @@ export function Transport() {
   const [showReportExporter, setShowReportExporter] = useState(false);
   const [showEventForm, setShowEventForm] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
+  const [showLiveTracking, setShowLiveTracking] = useState(false);
+  const [showSafetyAlert, setShowSafetyAlert] = useState(false);
+  const [alertData, setAlertData] = useState<any>(null);
   
   const { routes, addRoute, updateRoute, deleteRoute } = useTransport();
+  const { generateReport } = useReports();
   
   // Use mock data initially, but allow for real CRUD operations
   const allRoutes = routes.length > 0 ? routes : mockTransportRoutes;
@@ -96,6 +100,34 @@ export function Transport() {
 
   const handleSaveEvent = (eventData: any) => {
     // Implementation for saving transport events
+  };
+
+  const handleTrackRoute = (route: any) => {
+    setSelectedRoute(route);
+    setShowLiveTracking(true);
+  };
+
+  const handleCreateSafetyAlert = (route: any) => {
+    setAlertData({ route, type: 'emergency', message: '' });
+    setShowSafetyAlert(true);
+  };
+
+  const handleExportRouteData = (route: any) => {
+    generateReport({
+      type: 'transport_route_manifest',
+      title: `${route.name} - Route Manifest`,
+      data: route,
+      format: 'pdf'
+    });
+  };
+
+  const handleGenerateTransportReport = () => {
+    generateReport({
+      type: 'transport_safety_report',
+      title: 'Transport Safety Report',
+      data: allRoutes,
+      format: 'xlsx'
+    });
   };
 
   const RouteForm = () => {
@@ -329,7 +361,7 @@ export function Transport() {
                 <Eye className="h-4 w-4 mr-1" />
                 View Route
               </Button>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={() => handleTrackRoute(route)}>
                 <Navigation className="h-4 w-4 mr-1" />
                 Track Live
               </Button>
@@ -341,17 +373,13 @@ export function Transport() {
                 <Trash2 className="h-4 w-4 mr-1" />
                 Delete
               </Button>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <Download className="h-4 w-4 mr-1" />
-                    Export
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-2xl">
-                  <ReportExporter data={route} title={`${route.name} Report`} type="transport" />
-                </DialogContent>
-              </Dialog>
+              <Button variant="outline" size="sm" onClick={() => handleExportRouteData(route)}>
+                <Download className="h-4 w-4 mr-1" />
+                Export
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => handleCreateSafetyAlert(route)}>
+                <AlertTriangle className="h-4 w-4 mr-1" />
+                Alert
               </Button>
             </div>
           </div>
@@ -434,9 +462,13 @@ export function Transport() {
           <Badge variant="secondary" className="bg-blue-50 text-blue-700">
             {studentsOnTransport} Students on Transport
           </Badge>
-          <Button>
+          <Button onClick={handleAddRoute}>
             <Plus className="h-4 w-4 mr-2" />
             Add Route
+          </Button>
+          <Button variant="outline" onClick={handleGenerateTransportReport}>
+            <FileText className="h-4 w-4 mr-2" />
+            Safety Report
           </Button>
           <Dialog>
             <DialogTrigger asChild>
@@ -854,6 +886,26 @@ export function Transport() {
             type="transport"
             onClose={() => setShowReportExporter(false)}
           />
+        </DialogContent>
+      </Dialog>
+
+      {/* Live Tracking Dialog */}
+      <Dialog open={showLiveTracking} onOpenChange={setShowLiveTracking}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Live Route Tracking - {selectedRoute?.name}</DialogTitle>
+          </DialogHeader>
+          <LiveTrackingInterface route={selectedRoute} />
+        </DialogContent>
+      </Dialog>
+
+      {/* Safety Alert Dialog */}
+      <Dialog open={showSafetyAlert} onOpenChange={setShowSafetyAlert}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create Safety Alert</DialogTitle>
+          </DialogHeader>
+          <SafetyAlertForm alertData={alertData} onClose={() => setShowSafetyAlert(false)} />
         </DialogContent>
       </Dialog>
     </div>

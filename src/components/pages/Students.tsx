@@ -7,10 +7,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { mockLearners, mockClassrooms } from '@/data/mock-data';
-import { useStudents } from '@/store';
+import { useStudents, useReports } from '@/store';
 import { StudentForm } from '@/components/forms/StudentForm';
 import { formatDate } from '@/lib/utils';
 import { ReportExporter } from '@/components/features/ReportExporter';
+import { CBCReportCard } from '@/components/features/CBCReportCard';
 import { 
   Search, 
   Plus, 
@@ -34,8 +35,11 @@ export function Students() {
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [studentToDelete, setStudentToDelete] = useState<any>(null);
+  const [showReportCard, setShowReportCard] = useState(false);
+  const [reportStudent, setReportStudent] = useState<any>(null);
   
   const { students, addStudent, updateStudent, deleteStudent } = useStudents();
+  const { generateReport } = useReports();
   
   // Use mock data initially, but allow for real CRUD operations
   const allStudents = students.length > 0 ? students : mockLearners;
@@ -79,6 +83,29 @@ export function Students() {
       setShowDeleteDialog(false);
       setStudentToDelete(null);
     }
+  };
+
+  const handleGenerateReportCard = (student: any) => {
+    setReportStudent(student);
+    setShowReportCard(true);
+  };
+
+  const handleExportStudentData = (student: any) => {
+    generateReport({
+      type: 'student_profile',
+      title: `${student.name} - Student Profile`,
+      data: student,
+      format: 'pdf'
+    });
+  };
+
+  const handleBulkExport = () => {
+    generateReport({
+      type: 'student_directory',
+      title: 'Student Directory',
+      data: filteredStudents,
+      format: 'xlsx'
+    });
   };
 
   const StudentCard = ({ student }: { student: any }) => {
@@ -133,6 +160,14 @@ export function Students() {
               <Button variant="outline" size="sm" onClick={() => handleEditStudent(student)}>
                 <Edit className="h-4 w-4 mr-1" />
                 Edit
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => handleGenerateReportCard(student)}>
+                <FileText className="h-4 w-4 mr-1" />
+                Report Card
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => handleExportStudentData(student)}>
+                <Download className="h-4 w-4 mr-1" />
+                Export
               </Button>
               <Button variant="outline" size="sm" onClick={() => handleDeleteStudent(student)}>
                 <Trash2 className="h-4 w-4 mr-1" />
@@ -287,6 +322,24 @@ export function Students() {
           <Download className="h-4 w-4 mr-2" />
           Export List
         </Button>
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button variant="outline">
+              <FileText className="h-4 w-4 mr-2" />
+              Generate Reports
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-3xl">
+            <DialogHeader>
+              <DialogTitle>Student Reports</DialogTitle>
+            </DialogHeader>
+            <ReportExporter 
+              data={filteredStudents} 
+              title="Student Reports" 
+              type="students"
+            />
+          </DialogContent>
+        </Dialog>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -327,9 +380,31 @@ export function Students() {
               <Plus className="h-4 w-4 mr-2" />
               Add Student
             </Button>
+            <Button variant="outline" onClick={handleBulkExport}>
+              <Download className="h-4 w-4 mr-2" />
+              Export All
+            </Button>
           </CardContent>
         </Card>
       )}
+
+      {/* Report Card Dialog */}
+      <Dialog open={showReportCard} onOpenChange={setShowReportCard}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>CBC Report Card - {reportStudent?.name}</DialogTitle>
+          </DialogHeader>
+          {reportStudent && (
+            <CBCReportCard 
+              student={reportStudent}
+              term={1}
+              academicYear="2024"
+              assessments={[]}
+              school={{ name: "Karagita Primary School" }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

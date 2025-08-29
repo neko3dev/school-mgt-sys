@@ -44,8 +44,13 @@ export function Staff() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [teacherToDelete, setTeacherToDelete] = useState<any>(null);
   const [showReportExporter, setShowReportExporter] = useState(false);
+  const [showTPADDialog, setShowTPADDialog] = useState(false);
+  const [teacherForTPAD, setTeacherForTPAD] = useState<any>(null);
+  const [showPerformanceDialog, setShowPerformanceDialog] = useState(false);
+  const [teacherForPerformance, setTeacherForPerformance] = useState<any>(null);
 
   const { staff, addStaff, updateStaff, deleteStaff } = useStaff();
+  const { generateReport } = useReports();
 
   const mockStaff = [
     ...mockTeachers,
@@ -138,6 +143,34 @@ export function Staff() {
     }
   };
 
+  const handleViewTPAD = (teacher: any) => {
+    setTeacherForTPAD(teacher);
+    setShowTPADDialog(true);
+  };
+
+  const handleViewPerformance = (teacher: any) => {
+    setTeacherForPerformance(teacher);
+    setShowPerformanceDialog(true);
+  };
+
+  const handleExportTPAD = (teacher: any) => {
+    generateReport({
+      type: 'tpad_bundle',
+      title: `${teacher.name} - TPAD Evidence Bundle`,
+      data: teacher,
+      format: 'zip'
+    });
+  };
+
+  const handleGenerateStaffReport = () => {
+    generateReport({
+      type: 'staff_directory',
+      title: 'Staff Directory',
+      data: allStaff,
+      format: 'xlsx'
+    });
+  };
+
   const TeacherCard = ({ teacher }: { teacher: any }) => {
     const teacherSubjects = teacher.subjects?.map((subId: string) => 
       mockSubjects.find(s => s.id === subId)?.name
@@ -197,6 +230,14 @@ export function Staff() {
                 <Edit className="h-4 w-4 mr-1" />
                 Edit
               </Button>
+              <Button variant="outline" size="sm" onClick={() => handleViewTPAD(teacher)}>
+                <FileText className="h-4 w-4 mr-1" />
+                TPAD
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => handleExportTPAD(teacher)}>
+                <Download className="h-4 w-4 mr-1" />
+                Export
+              </Button>
               <Dialog>
                 <DialogTrigger asChild>
                   <Button variant="outline" size="sm">
@@ -231,6 +272,7 @@ export function Staff() {
                 Delete
               </Button>
               <Button size="sm">
+              <Button size="sm" onClick={() => handleViewPerformance(teacher)}>
                 <Award className="h-4 w-4 mr-1" />
                 Performance
               </Button>
@@ -662,6 +704,10 @@ export function Staff() {
             <Plus className="h-4 w-4 mr-2" />
             Add Staff
           </Button>
+          <Button variant="outline" onClick={handleGenerateStaffReport}>
+            <Users className="h-4 w-4 mr-2" />
+            Staff Report
+          </Button>
           <Button onClick={() => setShowReportExporter(true)} variant="outline">
             <FileText className="h-4 w-4 mr-2" />
             Staff Reports
@@ -991,6 +1037,26 @@ export function Staff() {
               </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* TPAD Dialog */}
+      <Dialog open={showTPADDialog} onOpenChange={setShowTPADDialog}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>TPAD Portfolio - {teacherForTPAD?.name}</DialogTitle>
+          </DialogHeader>
+          {teacherForTPAD && <TPADBuilder teacher={teacherForTPAD} />}
+        </DialogContent>
+      </Dialog>
+
+      {/* Performance Dialog */}
+      <Dialog open={showPerformanceDialog} onOpenChange={setShowPerformanceDialog}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Performance Review - {teacherForPerformance?.name}</DialogTitle>
+          </DialogHeader>
+          {teacherForPerformance && <PerformanceReview teacher={teacherForPerformance} />}
         </DialogContent>
       </Dialog>
 

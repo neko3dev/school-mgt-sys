@@ -41,7 +41,11 @@ export function Inventory() {
   const [showMaintenanceForm, setShowMaintenanceForm] = useState(false);
   const [showReportExporter, setShowReportExporter] = useState(false);
 
+  const [showMaintenanceDialog, setShowMaintenanceDialog] = useState(false);
+  const [assetForMaintenance, setAssetForMaintenance] = useState<any>(null);
+
   const { assets, maintenance, addAsset, updateAsset, deleteAsset, addMaintenance } = useInventory();
+  const { generateReport } = useReports();
 
   const mockAssets = [
     {
@@ -142,6 +146,29 @@ export function Inventory() {
     }
   };
 
+  const handleScheduleMaintenance = (asset: any) => {
+    setAssetForMaintenance(asset);
+    setShowMaintenanceDialog(true);
+  };
+
+  const handleExportAsset = (asset: any) => {
+    generateReport({
+      type: 'asset_details',
+      title: `${asset.name} - Asset Details`,
+      data: asset,
+      format: 'pdf'
+    });
+  };
+
+  const handleGenerateInventoryReport = () => {
+    generateReport({
+      type: 'inventory_register',
+      title: 'Inventory Register',
+      data: allAssets,
+      format: 'xlsx'
+    });
+  };
+
   const AssetCard = ({ asset }: { asset: any }) => {
     const conditionConfig = {
       excellent: { color: 'text-green-600', bg: 'bg-green-50' },
@@ -200,13 +227,17 @@ export function Inventory() {
                 <Edit className="h-4 w-4 mr-1" />
                 Edit
               </Button>
-              <Button variant="outline" size="sm" onClick={() => setShowMaintenanceForm(true)}>
+              <Button variant="outline" size="sm" onClick={() => handleScheduleMaintenance(asset)}>
                 <Wrench className="h-4 w-4 mr-1" />
                 Maintain
               </Button>
               <Button variant="outline" size="sm">
                 <QrCode className="h-4 w-4 mr-1" />
                 QR Code
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => handleExportAsset(asset)}>
+                <Download className="h-4 w-4 mr-1" />
+                Export
               </Button>
               <Button variant="outline" size="sm" onClick={() => handleDeleteAsset(asset)}>
                 <Trash2 className="h-4 w-4 mr-1" />
@@ -358,6 +389,10 @@ export function Inventory() {
           <Button onClick={handleAddAsset}>
             <Plus className="h-4 w-4 mr-2" />
             Add Asset
+          </Button>
+          <Button variant="outline" onClick={handleGenerateInventoryReport}>
+            <FileText className="h-4 w-4 mr-2" />
+            Inventory Report
           </Button>
           <Button onClick={() => setShowReportExporter(true)} variant="outline">
             <FileText className="h-4 w-4 mr-2" />
@@ -601,6 +636,16 @@ export function Inventory() {
             type="privacy"
             onClose={() => setShowReportExporter(false)}
           />
+        </DialogContent>
+      </Dialog>
+
+      {/* Maintenance Dialog */}
+      <Dialog open={showMaintenanceDialog} onOpenChange={setShowMaintenanceDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Schedule Maintenance - {assetForMaintenance?.name}</DialogTitle>
+          </DialogHeader>
+          <MaintenanceForm asset={assetForMaintenance} onClose={() => setShowMaintenanceDialog(false)} />
         </DialogContent>
       </Dialog>
     </div>

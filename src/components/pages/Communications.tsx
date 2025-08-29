@@ -48,6 +48,7 @@ export function Communications() {
   const [selectedMessageForView, setSelectedMessageForView] = useState<any>(null);
 
   const { messages, templates, addMessage, updateMessage, deleteMessage, addTemplate, updateTemplate, deleteTemplate } = useCommunications();
+  const { generateReport } = useReports();
 
   const mockMessages = [
     {
@@ -141,6 +142,30 @@ export function Communications() {
     setShowMessageDetails(true);
   };
 
+  const handleSendMessage = (message: any) => {
+    // Simulate sending message
+    updateMessage(message.id, { status: 'sent', sent_at: new Date().toISOString() });
+    alert(`Message "${message.subject}" sent to ${message.recipients.length} recipients`);
+  };
+
+  const handleExportMessage = (message: any) => {
+    generateReport({
+      type: 'message_report',
+      title: `Message Report - ${message.subject}`,
+      data: message,
+      format: 'pdf'
+    });
+  };
+
+  const handleGenerateCommunicationReport = () => {
+    generateReport({
+      type: 'communication_analytics',
+      title: 'Communication Analytics Report',
+      data: allMessages,
+      format: 'xlsx'
+    });
+  };
+
   const handleDeleteMessage = (message: any) => {
     if (confirm(`Delete message "${message.subject}"?`)) {
       deleteMessage(message.id);
@@ -182,6 +207,14 @@ export function Communications() {
                 <Button variant="outline" size="sm" onClick={() => handleEditMessage(message)}>
                   <Edit className="h-4 w-4 mr-1" />
                   Edit
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => handleSendMessage(message)}>
+                  <Send className="h-4 w-4 mr-1" />
+                  Send
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => handleExportMessage(message)}>
+                  <Download className="h-4 w-4 mr-1" />
+                  Export
                 </Button>
                 <Button variant="outline" size="sm" onClick={() => handleDeleteMessage(message)}>
                   <Trash2 className="h-4 w-4 mr-1" />
@@ -429,6 +462,10 @@ export function Communications() {
             <Plus className="h-4 w-4 mr-2" />
             New Message
           </Button>
+          <Button variant="outline" onClick={handleGenerateCommunicationReport}>
+            <BarChart3 className="h-4 w-4 mr-2" />
+            Analytics
+          </Button>
           <Button onClick={() => setShowReportExporter(true)} variant="outline">
             <FileText className="h-4 w-4 mr-2" />
             Communication Reports
@@ -577,6 +614,17 @@ export function Communications() {
                         <Send className="h-4 w-4 mr-1" />
                         Use Template
                       </Button>
+                     <Button variant="outline" size="sm" onClick={() => {
+                       generateReport({
+                         type: 'template_usage_report',
+                         title: `${template.name} - Usage Report`,
+                         data: template,
+                         format: 'pdf'
+                       });
+                     }}>
+                       <FileText className="h-4 w-4 mr-1" />
+                       Usage Report
+                     </Button>
                       <Button variant="outline" size="sm">
                         <Trash2 className="h-4 w-4 mr-1" />
                         Delete

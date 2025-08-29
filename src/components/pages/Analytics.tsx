@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Progress } from '@/components/ui/progress';
 import { mockLearners, mockSBATasks, mockAttendance, mockFeeInvoices } from '@/data/mock-data';
 import { ReportExporter } from '@/components/features/ReportExporter';
+import { useReports } from '@/store';
 import { formatDate, formatCurrency } from '@/lib/utils';
 import { 
   BarChart3, 
@@ -29,6 +30,7 @@ import {
   Award,
   Clock,
   DollarSign
+  Heart
 } from 'lucide-react';
 
 export function Analytics() {
@@ -44,6 +46,27 @@ export function Analytics() {
   const feeCollection = mockFeeInvoices.reduce((sum, inv) => sum + (inv.total - inv.balance), 0);
   const totalFees = mockFeeInvoices.reduce((sum, inv) => sum + inv.total, 0);
   const collectionRate = (feeCollection / totalFees) * 100;
+
+  const performanceMetrics = [
+  const { generateReport } = useReports();
+
+  const handleExportAnalytics = () => {
+    generateReport({
+      type: 'analytics_dashboard',
+      title: 'School Analytics Dashboard',
+      data: performanceMetrics,
+      format: 'pdf'
+    });
+  };
+
+  const handleExportKPIReport = () => {
+    generateReport({
+      type: 'kpi_report',
+      title: 'Key Performance Indicators Report',
+      data: performanceMetrics,
+      format: 'xlsx'
+    });
+  };
 
   const performanceMetrics = [
     {
@@ -118,6 +141,14 @@ export function Analytics() {
           <Button onClick={() => setShowReportExporter(true)} variant="outline">
             <Download className="h-4 w-4 mr-2" />
             Export Analytics
+          </Button>
+          <Button variant="outline" onClick={handleExportAnalytics}>
+            <FileText className="h-4 w-4 mr-2" />
+            Dashboard PDF
+          </Button>
+          <Button variant="outline" onClick={handleExportKPIReport}>
+            <BarChart3 className="h-4 w-4 mr-2" />
+            KPI Report
           </Button>
           <Button variant="outline">
             <RefreshCw className="h-4 w-4 mr-2" />
@@ -502,7 +533,14 @@ export function Analytics() {
                         <Eye className="h-4 w-4 mr-1" />
                         View Profile
                       </Button>
-                      <Button size="sm">
+                      <Button size="sm" onClick={() => {
+                        generateReport({
+                          type: 'intervention_plan',
+                          title: `${student.student} - Intervention Plan`,
+                          data: student,
+                          format: 'pdf'
+                        });
+                      }}>
                         <Heart className="h-4 w-4 mr-1" />
                         Create Intervention
                       </Button>

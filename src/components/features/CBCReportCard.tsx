@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { formatDate } from '@/lib/utils';
-import { ReportExporter } from './ReportExporter';
+import { UniversalReportGenerator } from './UniversalReportGenerator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { 
   GraduationCap, 
@@ -79,10 +79,10 @@ export function CBCReportCard({ student, term, academicYear, assessments, school
               <DialogHeader>
                 <DialogTitle>Export Report Card</DialogTitle>
               </DialogHeader>
-              <ReportExporter 
+              <UniversalReportGenerator 
+                reportType="cbc_report_card"
                 data={{ student, assessments, term, academicYear }} 
                 title={`${student.name} Report Card`} 
-                type="assessment"
               />
             </DialogContent>
           </Dialog>
@@ -98,7 +98,7 @@ export function CBCReportCard({ student, term, academicYear, assessments, school
       </div>
 
       {/* Report Card Content */}
-    <div className="max-w-4xl mx-auto bg-white">
+      <div className="max-w-4xl mx-auto bg-white">
       {/* Header */}
       <div className="border-b-2 border-blue-600 pb-6 mb-6">
         <div className="flex items-center justify-between">
@@ -357,6 +357,6 @@ export function CBCReportCard({ student, term, academicYear, assessments, school
         <p>© 2024 {school?.name || 'School Name'} - All Rights Reserved</p>
       </div>
     </div>
-    </div>
+      </div>
   );
 }

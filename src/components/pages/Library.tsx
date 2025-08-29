@@ -42,7 +42,11 @@ export function Library() {
   const [showIssueForm, setShowIssueForm] = useState(false);
   const [showReportExporter, setShowReportExporter] = useState(false);
 
+  const [showReturnDialog, setShowReturnDialog] = useState(false);
+  const [issueToReturn, setIssueToReturn] = useState<any>(null);
+
   const { books, issues, addBook, updateBook, deleteBook, issueBook, returnBook } = useLibrary();
+  const { generateReport } = useReports();
 
   const mockBooks = [
     {
@@ -148,6 +152,37 @@ export function Library() {
     }
   };
 
+  const handleReturnBook = (issue: any) => {
+    setIssueToReturn(issue);
+    setShowReturnDialog(true);
+  };
+
+  const confirmReturn = () => {
+    if (issueToReturn) {
+      returnBook(issueToReturn.id);
+      setShowReturnDialog(false);
+      setIssueToReturn(null);
+    }
+  };
+
+  const handleExportBookData = (book: any) => {
+    generateReport({
+      type: 'book_details',
+      title: `${book.title} - Book Details`,
+      data: book,
+      format: 'pdf'
+    });
+  };
+
+  const handleGenerateLibraryReport = () => {
+    generateReport({
+      type: 'library_inventory',
+      title: 'Library Inventory Report',
+      data: allBooks,
+      format: 'xlsx'
+    });
+  };
+
   const BookCard = ({ book }: { book: any }) => {
     const availabilityRate = (book.copies_available / book.copies_total) * 100;
     const subject = mockSubjects.find(s => s.id === book.subject_id);
@@ -203,6 +238,10 @@ export function Library() {
                 <Bookmark className="h-4 w-4 mr-1" />
                 Issue
               </Button>
+              <Button variant="outline" size="sm" onClick={() => handleExportBookData(book)}>
+                <Download className="h-4 w-4 mr-1" />
+                Export
+              </Button>
               <Button variant="outline" size="sm" onClick={() => handleDeleteBook(book)}>
                 <Trash2 className="h-4 w-4 mr-1" />
                 Delete
@@ -249,7 +288,7 @@ export function Library() {
 
             <div className="flex flex-col space-y-2">
               {issue.status === 'issued' && (
-                <Button size="sm" onClick={() => returnBook(issue.id)}>
+                <Button size="sm" onClick={() => handleReturnBook(issue)}>
                   <CheckCircle className="h-4 w-4 mr-1" />
                   Return
                 </Button>
@@ -480,6 +519,10 @@ export function Library() {
             <Plus className="h-4 w-4 mr-2" />
             Add Book
           </Button>
+          <Button variant="outline" onClick={handleGenerateLibraryReport}>
+            <FileText className="h-4 w-4 mr-2" />
+            Library Report
+          </Button>
           <Button onClick={() => setShowReportExporter(true)} variant="outline">
             <FileText className="h-4 w-4 mr-2" />
             Library Reports
@@ -672,6 +715,33 @@ export function Library() {
             type="privacy"
             onClose={() => setShowReportExporter(false)}
           />
+        </DialogContent>
+      </Dialog>
+
+      {/* Return Book Dialog */}
+      <Dialog open={showReturnDialog} onOpenChange={setShowReturnDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Return Book</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p>Confirm return of book:</p>
+            <div className="p-3 bg-gray-50 rounded">
+              <p className="font-medium">{getBook(issueToReturn?.book_id)?.title}</p>
+              <p className="text-sm text-gray-600">
+                Issued to: {getStudent(issueToReturn?.learner_id)?.name}
+              </p>
+            </div>
+            <div className="flex space-x-2">
+              <Button onClick={confirmReturn}>
+                <CheckCircle className="h-4 w-4 mr-2" />
+                Confirm Return
+              </Button>
+              <Button variant="outline" onClick={() => setShowReturnDialog(false)}>
+                Cancel
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

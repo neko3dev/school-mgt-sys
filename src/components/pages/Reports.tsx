@@ -39,6 +39,29 @@ export function Reports() {
   
   const { reports, templates, exportQueue, generateReport, saveTemplate, deleteTemplate } = useReports();
 
+  const handleQuickGenerate = (reportName: string, format: string) => {
+    generateReport({
+      type: reportName.toLowerCase().replace(/\s+/g, '_'),
+      title: reportName,
+      data: [],
+      format
+    });
+  };
+
+  const handleScheduleReport = (reportName: string) => {
+    const scheduleDate = prompt('Enter schedule date (YYYY-MM-DD HH:MM):');
+    if (scheduleDate) {
+      generateReport({
+        type: reportName.toLowerCase().replace(/\s+/g, '_'),
+        title: reportName,
+        data: [],
+        format: 'pdf',
+        scheduled_at: scheduleDate
+      });
+      alert(`Report "${reportName}" scheduled for ${scheduleDate}`);
+    }
+  };
+
   const reportCategories = [
     {
       id: 'academic',
@@ -170,9 +193,13 @@ export function Reports() {
                       <ReportBuilder report={report} />
                     </DialogContent>
                   </Dialog>
-                  <Button size="sm" className="flex-1" onClick={() => generateReport({ report_type: report.name, format: 'pdf' })}>
+                  <Button size="sm" className="flex-1" onClick={() => handleQuickGenerate(report.name, 'pdf')}>
                     <Download className="h-4 w-4 mr-1" />
                     Generate
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => handleScheduleReport(report.name)}>
+                    <Calendar className="h-4 w-4 mr-1" />
+                    Schedule
                   </Button>
                   <Dialog>
                     <DialogTrigger asChild>
@@ -552,6 +579,10 @@ export function Reports() {
                   <Button variant="outline" size="sm">
                     <Download className="h-4 w-4 mr-2" />
                     Download Audit Log
+                  <Button variant="outline" size="sm" onClick={() => handleQuickGenerate(schedule.name, 'pdf')}>
+                    <Download className="h-4 w-4 mr-1" />
+                    Run Now
+                  </Button>
                   </Button>
                 </div>
               </div>
@@ -638,6 +669,17 @@ export function Reports() {
                 <Plus className="h-4 w-4 mr-2" />
                 Create Template
               </Button>
+              <Button variant="outline" onClick={() => {
+                generateReport({
+                  type: 'template_library',
+                  title: 'Report Template Library',
+                  data: templates,
+                  format: 'pdf'
+                });
+              }}>
+                <FileText className="h-4 w-4 mr-2" />
+                Export Library
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>
@@ -680,7 +722,7 @@ export function Reports() {
                 </Select>
               </div>
             </div>
-            <Button onClick={() => generateReport({ type: 'custom', format: 'pdf' })}>
+            <Button onClick={() => handleQuickGenerate('Custom Report', 'pdf')}>
               <Download className="h-4 w-4 mr-2" />
               Generate Custom Report
             </Button>

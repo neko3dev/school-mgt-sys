@@ -29,7 +29,8 @@ import {
   Users,
   Award,
   Trash2,
-  Download
+  Download,
+  BarChart3
 } from 'lucide-react';
 
 export function Assessment() {
@@ -38,8 +39,13 @@ export function Assessment() {
   const [selectedTask, setSelectedTask] = useState<any>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState<any>(null);
+  const [showEvidenceForm, setShowEvidenceForm] = useState(false);
+  const [selectedEvidence, setSelectedEvidence] = useState<any>(null);
+  const [showGradingDialog, setShowGradingDialog] = useState(false);
+  const [taskToGrade, setTaskToGrade] = useState<any>(null);
   
   const { tasks, addTask, updateTask, deleteTask } = useAssessment();
+  const { generateReport } = useReports();
   
   // Use mock data initially, but allow for real CRUD operations
   const allTasks = tasks.length > 0 ? tasks : mockSBATasks;
@@ -81,6 +87,34 @@ export function Assessment() {
       setShowDeleteDialog(false);
       setTaskToDelete(null);
     }
+  };
+
+  const handleGradeTask = (task: any) => {
+    setTaskToGrade(task);
+    setShowGradingDialog(true);
+  };
+
+  const handleAddEvidence = (task: any) => {
+    setSelectedTask(task);
+    setShowEvidenceForm(true);
+  };
+
+  const handleExportTaskData = (task: any) => {
+    generateReport({
+      type: 'sba_task_report',
+      title: `${task.title} - Assessment Report`,
+      data: task,
+      format: 'pdf'
+    });
+  };
+
+  const handleGenerateClassReport = () => {
+    generateReport({
+      type: 'class_mastery_heatmap',
+      title: 'Class Mastery Heatmap',
+      data: allTasks,
+      format: 'xlsx'
+    });
   };
 
   const TaskCard = ({ task }: { task: any }) => {
@@ -141,6 +175,18 @@ export function Assessment() {
                 <Button variant="outline" size="sm" onClick={() => handleEditTask(task)}>
                   <Edit className="h-4 w-4 mr-1" />
                   Edit
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => handleGradeTask(task)}>
+                  <Award className="h-4 w-4 mr-1" />
+                  Grade
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => handleAddEvidence(task)}>
+                  <Camera className="h-4 w-4 mr-1" />
+                  Evidence
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => handleExportTaskData(task)}>
+                  <Download className="h-4 w-4 mr-1" />
+                  Export
                 </Button>
                 <Dialog>
                   <DialogTrigger asChild>
@@ -309,6 +355,10 @@ export function Assessment() {
           <Button onClick={handleAddTask}>
             <Plus className="h-4 w-4 mr-2" />
             Create SBA Task
+          </Button>
+          <Button variant="outline" onClick={handleGenerateClassReport}>
+            <BarChart3 className="h-4 w-4 mr-2" />
+            Class Reports
           </Button>
           <Dialog>
             <DialogTrigger asChild>
@@ -589,6 +639,26 @@ export function Assessment() {
               </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Grading Dialog */}
+      <Dialog open={showGradingDialog} onOpenChange={setShowGradingDialog}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Grade Task: {taskToGrade?.title}</DialogTitle>
+          </DialogHeader>
+          <GradingInterface task={taskToGrade} onClose={() => setShowGradingDialog(false)} />
+        </DialogContent>
+      </Dialog>
+
+      {/* Evidence Form Dialog */}
+      <Dialog open={showEvidenceForm} onOpenChange={setShowEvidenceForm}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Add Evidence</DialogTitle>
+          </DialogHeader>
+          <EvidenceForm task={selectedTask} onClose={() => setShowEvidenceForm(false)} />
         </DialogContent>
       </Dialog>
     </div>

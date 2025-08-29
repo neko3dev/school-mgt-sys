@@ -41,7 +41,11 @@ export function Attendance() {
   const [showEditAttendance, setShowEditAttendance] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<any>(null);
 
+  const [showBulkActions, setShowBulkActions] = useState(false);
+  const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
+
   const { attendance, addAttendanceRecord, updateAttendanceRecord, deleteAttendanceRecord } = useAttendance();
+  const { generateReport } = useReports();
 
   const todayAttendance = mockAttendance.filter(a => a.date === selectedDate);
   const presentCount = todayAttendance.filter(a => a.status === 'present').length;
@@ -83,6 +87,32 @@ export function Attendance() {
     }
     setShowEditAttendance(false);
     setSelectedRecord(null);
+  };
+
+  const handleBulkMarkPresent = () => {
+    selectedStudents.forEach(studentId => {
+      handleMarkAttendance(studentId, 'present');
+    });
+    setSelectedStudents([]);
+    setShowBulkActions(false);
+  };
+
+  const handleGenerateAttendanceReport = () => {
+    generateReport({
+      type: 'daily_attendance_register',
+      title: `Attendance Register - ${formatDate(selectedDate)}`,
+      data: todayAttendance,
+      format: 'pdf'
+    });
+  };
+
+  const handleExportMonthlyReport = () => {
+    generateReport({
+      type: 'monthly_attendance_summary',
+      title: 'Monthly Attendance Summary',
+      data: mockAttendance,
+      format: 'xlsx'
+    });
   };
 
   const handleDeleteRecord = (record: any) => {
@@ -258,6 +288,18 @@ export function Attendance() {
             <Button size="sm" className="flex-1">
               <Plus className="h-4 w-4 mr-1" />
               Mark Attendance
+            </Button>
+            <Button variant="outline" onClick={() => setShowBulkActions(true)}>
+              <Users className="h-4 w-4 mr-2" />
+              Bulk Actions
+            </Button>
+            <Button variant="outline" onClick={handleGenerateAttendanceReport}>
+              <FileText className="h-4 w-4 mr-2" />
+              Daily Report
+            </Button>
+            <Button variant="outline" onClick={handleExportMonthlyReport}>
+              <Download className="h-4 w-4 mr-2" />
+              Monthly Export
             </Button>
           </div>
         </CardContent>
@@ -614,6 +656,47 @@ export function Attendance() {
             <DialogTitle>Mark Class Attendance</DialogTitle>
           </DialogHeader>
           <BulkAttendanceForm />
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk Actions Dialog */}
+      <Dialog open={showBulkActions} onOpenChange={setShowBulkActions}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Bulk Attendance Actions</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm text-gray-600 mb-3">Select students for bulk actions:</p>
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {mockLearners.filter(s => s.status === 'active').map(student => (
+                  <label key={student.id} className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      checked={selectedStudents.includes(student.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedStudents(prev => [...prev, student.id]);
+                        } else {
+                          setSelectedStudents(prev => prev.filter(id => id !== student.id));
+                        }
+                      }}
+                    />
+                    <span className="text-sm">{student.name}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+            <div className="flex space-x-2">
+              <Button onClick={handleBulkMarkPresent} disabled={selectedStudents.length === 0}>
+                <CheckCircle className="h-4 w-4 mr-2" />
+                Mark Present ({selectedStudents.length})
+              </Button>
+              <Button variant="outline" onClick={() => setShowBulkActions(false)}>
+                Cancel
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

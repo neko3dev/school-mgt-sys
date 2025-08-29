@@ -28,7 +28,8 @@ import {
   FileText,
   AlertTriangle,
   CheckCircle,
-  RefreshCw
+  RefreshCw,
+  BarChart3
 } from 'lucide-react';
 
 export function Timetable() {
@@ -43,6 +44,7 @@ export function Timetable() {
   const [showLessonDetails, setShowLessonDetails] = useState(false);
 
   const { lessons, addLesson, updateLesson, deleteLesson } = useTimetable();
+  const { generateReport } = useReports();
 
   const mockLessons = [
     {
@@ -142,6 +144,35 @@ export function Timetable() {
   const handleViewLesson = (lesson: any) => {
     setSelectedLesson(lesson);
     setShowLessonDetails(true);
+  };
+
+  const handleExportTimetable = () => {
+    generateReport({
+      type: 'weekly_timetable',
+      title: 'Weekly Timetable',
+      data: allLessons,
+      format: 'pdf'
+    });
+  };
+
+  const handleExportTeacherSchedule = (teacherId: string) => {
+    const teacherLessons = allLessons.filter(l => l.teacher_id === teacherId);
+    const teacher = getTeacher(teacherId);
+    generateReport({
+      type: 'teacher_schedule',
+      title: `${teacher?.name} - Teaching Schedule`,
+      data: teacherLessons,
+      format: 'pdf'
+    });
+  };
+
+  const handleGenerateUtilizationReport = () => {
+    generateReport({
+      type: 'room_utilization_report',
+      title: 'Room Utilization Report',
+      data: allLessons,
+      format: 'xlsx'
+    });
   };
 
   const LessonForm = () => {
@@ -421,6 +452,14 @@ export function Timetable() {
             <Plus className="h-4 w-4 mr-2" />
             Add Lesson
           </Button>
+          <Button variant="outline" onClick={handleExportTimetable}>
+            <Download className="h-4 w-4 mr-2" />
+            Export Timetable
+          </Button>
+          <Button variant="outline" onClick={handleGenerateUtilizationReport}>
+            <BarChart3 className="h-4 w-4 mr-2" />
+            Utilization Report
+          </Button>
           <Button onClick={() => setShowReportExporter(true)} variant="outline">
             <FileText className="h-4 w-4 mr-2" />
             Timetable Reports
@@ -568,6 +607,10 @@ export function Timetable() {
                             Export Schedule
                           </Button>
                         </DialogTrigger>
+                        <Button variant="outline" size="sm" onClick={() => handleExportTeacherSchedule(teacher.id)}>
+                          <FileText className="h-4 w-4 mr-1" />
+                          Generate PDF
+                        </Button>
                         <DialogContent className="max-w-2xl">
                           <DialogHeader>
                             <DialogTitle>Export {teacher.name}'s Schedule</DialogTitle>
