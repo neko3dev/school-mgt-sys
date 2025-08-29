@@ -6,18 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { formatDate } from '@/lib/utils';
 import { UniversalReportGenerator } from './UniversalReportGenerator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { 
-  GraduationCap, 
-  Award, 
-  TrendingUp, 
-  Calendar,
-  User,
-  School,
-  Download,
-  FileText,
-  Share,
-  Print
-} from 'lucide-react';
+import { GraduationCap, Award, TrendingUp, Calendar, User, School, Download, FileText, Share, Printer as Print } from 'lucide-react';
 
 interface CBCReportCardProps {
   student: any;
