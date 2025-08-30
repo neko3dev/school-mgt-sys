@@ -279,6 +279,9 @@ export const useReports = create<ReportsState>((set) => ({
     // Simulate report generation
     setTimeout(() => {
       set((state) => ({
+        reports: state.reports.map(r => 
+          r.id === report.id ? { ...r, status: 'completed', file_url: `/reports/${report.id}.${config.format}` } : r
+        ),
         exportQueue: state.exportQueue.map(item => 
           item.id === report.id ? { ...item, status: 'completed', file_url: `/reports/${report.id}.${config.format}` } : item
         )

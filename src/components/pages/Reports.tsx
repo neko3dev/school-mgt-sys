@@ -201,24 +201,10 @@ export function Reports() {
                     <Calendar className="h-4 w-4 mr-1" />
                     Schedule
                   </Button>
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" size="sm">
-                        <Eye className="h-4 w-4 mr-1" />
-                        Export
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-2xl">
-                      <DialogHeader>
-                        <DialogTitle>Export {report.name}</DialogTitle>
-                      </DialogHeader>
-                      <ReportExporter 
-                        data={data || []} 
-                        title={report.name} 
-                        type={category.id as any}
-                      />
-                    </DialogContent>
-                  </Dialog>
+                  <Button variant="outline" size="sm" onClick={() => generateReport({ type: report.name.toLowerCase().replace(/\s+/g, '_'), title: report.name, data: [], format: 'xlsx' })}>
+                    <Eye className="h-4 w-4 mr-1" />
+                    Export
+                  </Button>
                 </div>
               </div>
             ))}

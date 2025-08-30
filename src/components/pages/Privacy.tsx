@@ -664,6 +664,10 @@ export function Privacy() {
                     <FileText className="h-4 w-4 mr-2" />
                     Generate Compliance Report
                   </Button>
+                  <Button variant="outline" className="flex-1" onClick={() => generateReport({ type: 'privacy_audit_trail', title: 'Privacy Audit Trail', data: mockProcessingRecords, format: 'csv' })}>
+                    <Download className="h-4 w-4 mr-2" />
+                    Export CSV
+                  </Button>
                 </div>
               </div>
             </CardContent>
