@@ -916,7 +916,7 @@ export function Welfare() {
           <DialogHeader>
             <DialogTitle>Welfare Case Details</DialogTitle>
           </DialogHeader>
-          <CaseDetailsView case={selectedCase} />
+          {selectedCase && <CaseDetailsView welfareCase={selectedCase} />}
         </DialogContent>
       </Dialog>
 
@@ -926,21 +926,29 @@ export function Welfare() {
           <DialogHeader>
             <DialogTitle>SNE Plan Details</DialogTitle>
           </DialogHeader>
-          <SNEPlanDetailsView plan={selectedSNEPlan} />
+          {selectedSNEPlan && <SNEPlanDetailsView plan={selectedSNEPlan} />}
         </DialogContent>
       </Dialog>
 
       {/* Report Exporter Dialog */}
       <Dialog open={showReportExporter} onOpenChange={setShowReportExporter}>
         <DialogContent className="max-w-4xl">
-          <ReportExporter data={allCases} title="Welfare Reports" type="privacy" />
+          <DialogHeader>
+            <DialogTitle>Welfare Reports</DialogTitle>
+          </DialogHeader>
+          <ReportExporter 
+            data={allCases} 
+            title="Welfare Reports" 
+            type="welfare"
+            onClose={() => setShowReportExporter(false)}
+          />
         </DialogContent>
       </Dialog>
     </div>
   );
 }
 
-const CaseDetailsView = ({ case: welfareCase }: { case: any }) => {
+const CaseDetailsView = ({ welfareCase }: { welfareCase: any }) => {
   if (!welfareCase) return null;
 
   const student = mockLearners.find(s => s.id === welfareCase.learner_id);

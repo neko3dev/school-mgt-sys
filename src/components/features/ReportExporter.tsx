@@ -138,6 +138,13 @@ export function ReportExporter({ data, title, type, onClose }: ReportExporterPro
       { name: 'Utilization Analysis', description: 'Asset usage statistics', formats: ['PDF'] },
       { name: 'Warranty Tracking', description: 'Asset warranty status', formats: ['Excel'] }
     ],
+    welfare: [
+      { name: 'Welfare Case Summary', description: 'Student welfare overview', formats: ['PDF'] },
+      { name: 'SNE Plans', description: 'Special needs education plans', formats: ['PDF'] },
+      { name: 'Safeguarding Reports', description: 'Child protection documentation', formats: ['PDF'] },
+      { name: 'Counseling Records', description: 'Student counseling sessions', formats: ['PDF'] },
+      { name: 'Intervention Tracking', description: 'Support intervention outcomes', formats: ['Excel'] }
+    ],
     privacy: [
       { name: 'Records of Processing', description: 'ODPC compliance documentation', formats: ['PDF'] },
       { name: 'Data Subject Requests', description: 'Privacy request handling log', formats: ['PDF', 'CSV'] },
@@ -151,6 +158,13 @@ export function ReportExporter({ data, title, type, onClose }: ReportExporterPro
       { name: 'Financial Analytics', description: 'Revenue and collection insights', formats: ['PDF', 'Excel'] },
       { name: 'Operational Metrics', description: 'School efficiency indicators', formats: ['Excel'] },
       { name: 'Predictive Insights', description: 'Trend analysis and forecasts', formats: ['PDF'] }
+    ],
+    events: [
+      { name: 'Events Calendar', description: 'School events and activities', formats: ['PDF'] },
+      { name: 'Event Details', description: 'Individual event information', formats: ['PDF'] },
+      { name: 'Budget Summary', description: 'Event budget analysis', formats: ['Excel'] },
+      { name: 'Attendance Reports', description: 'Event attendance tracking', formats: ['PDF', 'Excel'] },
+      { name: 'Event Analytics', description: 'Event performance metrics', formats: ['PDF'] }
     ]
   };
 

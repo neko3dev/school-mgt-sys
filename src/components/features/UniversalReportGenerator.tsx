@@ -124,23 +124,85 @@ export function UniversalReportGenerator({ reportType, data, title, onClose }: U
     setGeneratedReport(report);
     setIsGenerating(false);
 
-    // Auto-download
-    const blob = new Blob([`Generated ${config.format.toUpperCase()} report: ${config.title}`], 
-      { type: config.format === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${config.title.toLowerCase().replace(/\s+/g, '-')}.${config.format}`;
-    a.click();
-    URL.revokeObjectURL(url);
+    // Download the generated file
+    downloadFile(config.title, config.format, data);
 
     if (config.distribution.autoEmail && config.distribution.emailRecipients) {
       console.log(`Report emailed to: ${config.distribution.emailRecipients}`);
+      alert(`Report emailed to: ${config.distribution.emailRecipients}`);
     }
   };
 
+  const downloadFile = (filename: string, format: string, data: any) => {
+    let content = '';
+    let mimeType = '';
+    let extension = '';
+
+    switch (format.toLowerCase()) {
+      case 'pdf':
+        content = `%PDF-1.4\n% Generated Report: ${filename}\n1 0 obj\n<<\n/Type /Catalog\n/Pages 2 0 R\n>>\nendobj\n\n2 0 obj\n<<\n/Type /Pages\n/Kids [3 0 R]\n/Count 1\n>>\nendobj\n\n3 0 obj\n<<\n/Type /Page\n/Parent 2 0 R\n/MediaBox [0 0 612 792]\n/Contents 4 0 R\n>>\nendobj\n\n4 0 obj\n<<\n/Length 100\n>>\nstream\nBT\n/F1 12 Tf\n72 720 Td\n(${filename}) Tj\n0 -20 Td\n(Generated: ${new Date().toLocaleString()}) Tj\nET\nendstream\nendobj\n\nxref\n0 5\n0000000000 65535 f \n0000000009 00000 n \n0000000074 00000 n \n0000000120 00000 n \n0000000179 00000 n \ntrailer\n<<\n/Size 5\n/Root 1 0 R\n>>\nstartxref\n300\n%%EOF`;
+        mimeType = 'application/pdf';
+        extension = 'pdf';
+        break;
+      case 'xlsx':
+        content = JSON.stringify(data, null, 2);
+        mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+        extension = 'xlsx';
+        break;
+      case 'csv':
+        if (Array.isArray(data)) {
+          const headers = Object.keys(data[0] || {}).join(',');
+          const rows = data.map(item => Object.values(item).map(v => `"${v}"`).join(',')).join('\n');
+          content = `${headers}\n${rows}`;
+        } else {
+          content = `"Report","${filename}"\n"Generated","${new Date().toISOString()}"\n"Data","${JSON.stringify(data)}"`;
+        }
+        mimeType = 'text/csv';
+        extension = 'csv';
+        break;
+      case 'json':
+        content = JSON.stringify({
+          report: filename,
+          generated: new Date().toISOString(),
+          data: data
+        }, null, 2);
+        mimeType = 'application/json';
+        extension = 'json';
+        break;
+      default:
+        content = JSON.stringify(data, null, 2);
+        mimeType = 'text/plain';
+        extension = 'txt';
+    }
+
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${filename.toLowerCase().replace(/\s+/g, '-')}.${extension}`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   const handlePreview = () => {
-    alert('Report preview would open in a new window');
+    const previewWindow = window.open('', '_blank');
+    if (previewWindow) {
+      previewWindow.document.write(`
+        <html>
+          <head><title>Report Preview: ${config.title}</title></head>
+          <body style="font-family: Arial, sans-serif; padding: 20px;">
+            <h1>${config.title}</h1>
+            <p><strong>Format:</strong> ${config.format.toUpperCase()}</p>
+            <p><strong>Generated:</strong> ${new Date().toLocaleString()}</p>
+            <hr>
+            <pre>${JSON.stringify(data, null, 2)}</pre>
+          </body>
+        </html>
+      `);
+      previewWindow.document.close();
+    }
   };
 
   const handleSaveTemplate = () => {
