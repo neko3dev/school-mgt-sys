@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useAuth, useUI } from '@/store';
+import { useAuth, useUI, useSettings } from '@/store';
 import { 
   Settings as SettingsIcon,
   School,
@@ -25,13 +25,19 @@ import {
   Key,
   Clock,
   Download,
-  Upload
+  Upload,
+  Save
 } from 'lucide-react';
 
 export function Settings() {
   const { user, tenant } = useAuth();
   const { theme, setTheme } = useUI();
+  const { schoolSettings, systemSettings, updateSchoolSettings, updateSystemSettings } = useSettings();
   const [activeTab, setActiveTab] = useState('school');
+  const [hasChanges, setHasChanges] = useState(false);
+
+  const [schoolForm, setSchoolForm] = useState(schoolSettings);
+  const [systemForm, setSystemForm] = useState(systemSettings);
 
   const systemHealth = {
     database: { status: 'healthy', uptime: '99.9%', lastBackup: '2 hours ago' },
@@ -40,9 +46,39 @@ export function Settings() {
     notifications: { status: 'healthy', delivered: '98.5%', queue: '0' }
   };
 
+  const handleSaveSchoolSettings = () => {
+    updateSchoolSettings(schoolForm);
+    setHasChanges(false);
+    alert('School settings saved successfully!');
+  };
+
+  const handleSaveSystemSettings = () => {
+    updateSystemSettings(systemForm);
+    setHasChanges(false);
+    alert('System settings saved successfully!');
+  };
+
+  const handleSchoolFormChange = (field: string, value: any) => {
+    setSchoolForm(prev => ({ ...prev, [field]: value }));
+    setHasChanges(true);
+  };
+
+  const handleSystemFormChange = (field: string, value: any) => {
+    setSystemForm(prev => ({ ...prev, [field]: value }));
+    setHasChanges(true);
+  };
+
+  const handlePasswordPolicyChange = (field: string, value: any) => {
+    setSystemForm(prev => ({
+      ...prev,
+      password_policy: { ...prev.password_policy, [field]: value }
+    }));
+    setHasChanges(true);
+  };
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
           <p className="text-gray-600 mt-1">System configuration and administration</p>
@@ -51,232 +87,126 @@ export function Settings() {
           <Badge variant="secondary" className="bg-green-50 text-green-700">
             System Healthy
           </Badge>
+          {hasChanges && (
+            <Badge variant="destructive">
+              Unsaved Changes
+            </Badge>
+          )}
         </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-6 w-full">
-          <TabsTrigger value="school">School</TabsTrigger>
-          <TabsTrigger value="users">Users</TabsTrigger>
-          <TabsTrigger value="system">System</TabsTrigger>
-          <TabsTrigger value="security">Security</TabsTrigger>
-          <TabsTrigger value="notifications">Notifications</TabsTrigger>
-          <TabsTrigger value="integrations">Integrations</TabsTrigger>
+        <TabsList className="grid grid-cols-3 lg:grid-cols-6 w-full">
+          <TabsTrigger value="school" className="text-xs lg:text-sm">School</TabsTrigger>
+          <TabsTrigger value="users" className="text-xs lg:text-sm">Users</TabsTrigger>
+          <TabsTrigger value="system" className="text-xs lg:text-sm">System</TabsTrigger>
+          <TabsTrigger value="security" className="text-xs lg:text-sm">Security</TabsTrigger>
+          <TabsTrigger value="notifications" className="text-xs lg:text-sm">Notifications</TabsTrigger>
+          <TabsTrigger value="integrations" className="text-xs lg:text-sm">Integrations</TabsTrigger>
         </TabsList>
 
         <TabsContent value="school" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <School className="h-5 w-5 text-blue-600" />
-                <span>School Information</span>
+              <CardTitle className="flex items-center justify-between">
+                <span className="flex items-center space-x-2">
+                  <School className="h-5 w-5 text-blue-600" />
+                  <span>School Information</span>
+                </span>
+                {hasChanges && (
+                  <Button onClick={handleSaveSchoolSettings}>
+                    <Save className="h-4 w-4 mr-2" />
+                    Save Changes
+                  </Button>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="space-y-4">
                   <div>
                     <Label htmlFor="schoolName">School Name</Label>
-                    <Input id="schoolName" defaultValue={tenant?.name || "School Name"} />
+                    <Input 
+                      id="schoolName" 
+                      value={schoolForm.name}
+                      onChange={(e) => handleSchoolFormChange('name', e.target.value)}
+                    />
                   </div>
                   <div>
                     <Label htmlFor="schoolCode">School Code</Label>
-                    <Input id="schoolCode" defaultValue={tenant?.code || "01-01-001-001"} />
+                    <Input 
+                      id="schoolCode" 
+                      value={schoolForm.code}
+                      onChange={(e) => handleSchoolFormChange('code', e.target.value)}
+                    />
                   </div>
                   <div>
                     <Label htmlFor="county">County</Label>
-                    <select className="w-full border border-gray-300 rounded-md px-3 py-2">
-                      <option selected={tenant?.county === 'Nairobi'}>Nairobi</option>
-                      <option>Kiambu</option>
-                      <option>Machakos</option>
+                    <select 
+                      className="w-full border border-gray-300 rounded-md px-3 py-2"
+                      value={schoolForm.county}
+                      onChange={(e) => handleSchoolFormChange('county', e.target.value)}
+                    >
+                      <option value="Nairobi">Nairobi</option>
+                      <option value="Kiambu">Kiambu</option>
+                      <option value="Machakos">Machakos</option>
+                      <option value="Kajiado">Kajiado</option>
+                      <option value="Murang'a">Murang'a</option>
                     </select>
                   </div>
                   <div>
                     <Label htmlFor="subcounty">Sub-County</Label>
-                    <Input id="subcounty" defaultValue={tenant?.subcounty || "Sub-County"} />
+                    <Input 
+                      id="subcounty" 
+                      value={schoolForm.subcounty}
+                      onChange={(e) => handleSchoolFormChange('subcounty', e.target.value)}
+                    />
                   </div>
                 </div>
                 <div className="space-y-4">
                   <div>
-                    <Label htmlFor="headteacher">Head Teacher</Label>
-                    <Input id="headteacher" defaultValue="Jane Wanjiku Mwangi" />
+                    <Label htmlFor="motto">School Motto</Label>
+                    <Input 
+                      id="motto" 
+                      value={schoolForm.motto}
+                      onChange={(e) => handleSchoolFormChange('motto', e.target.value)}
+                    />
                   </div>
                   <div>
-                    <Label htmlFor="phone">Phone Number</Label>
-                    <Input id="phone" defaultValue="+254 700 123 456" />
+                    <Label htmlFor="academic_year">Academic Year</Label>
+                    <select 
+                      className="w-full border border-gray-300 rounded-md px-3 py-2"
+                      value={schoolForm.academic_year}
+                      onChange={(e) => handleSchoolFormChange('academic_year', e.target.value)}
+                    >
+                      <option value="2024">2024</option>
+                      <option value="2023">2023</option>
+                      <option value="2025">2025</option>
+                    </select>
                   </div>
                   <div>
-                    <Label htmlFor="email">Email Address</Label>
-                    <Input id="email" defaultValue="admin@karagita-primary.ac.ke" />
+                    <Label htmlFor="current_term">Current Term</Label>
+                    <select 
+                      className="w-full border border-gray-300 rounded-md px-3 py-2"
+                      value={schoolForm.current_term}
+                      onChange={(e) => handleSchoolFormChange('current_term', parseInt(e.target.value))}
+                    >
+                      <option value="1">Term 1</option>
+                      <option value="2">Term 2</option>
+                      <option value="3">Term 3</option>
+                    </select>
                   </div>
                   <div>
-                    <Label htmlFor="address">Physical Address</Label>
-                    <Input id="address" defaultValue="P.O. Box 12345, Nairobi" />
+                    <Label htmlFor="timezone">Timezone</Label>
+                    <select 
+                      className="w-full border border-gray-300 rounded-md px-3 py-2"
+                      value={schoolForm.timezone}
+                      onChange={(e) => handleSchoolFormChange('timezone', e.target.value)}
+                    >
+                      <option value="Africa/Nairobi">Africa/Nairobi (EAT)</option>
+                      <option value="UTC">UTC</option>
+                    </select>
                   </div>
-                </div>
-              </div>
-              <div className="mt-6">
-                <Button>Save Changes</Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Academic Year Configuration</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <Label>Current Academic Year</Label>
-                  <select className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2">
-                    <option selected={tenant?.settings.academic_year === '2024'}>2024</option>
-                    <option>2023</option>
-                  </select>
-                </div>
-                <div>
-                  <Label>Current Term</Label>
-                  <select className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2">
-                    <option selected={tenant?.settings.current_term === 1}>Term 1</option>
-                    <option>Term 2</option>
-                    <option>Term 3</option>
-                  </select>
-                </div>
-                <div>
-                  <Label>Term End Date</Label>
-                  <Input type="date" defaultValue="2024-04-05" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>School Branding</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <Label>School Logo</Label>
-                  <div className="mt-2 flex items-center space-x-4">
-                    <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center">
-                      <School className="h-8 w-8 text-blue-600" />
-                    </div>
-                    <div>
-                      <Button variant="outline" size="sm">
-                        <Upload className="h-4 w-4 mr-2" />
-                        Upload Logo
-                      </Button>
-                      <p className="text-xs text-gray-500 mt-1">PNG, JPG up to 2MB</p>
-                    </div>
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="motto">School Motto</Label>
-                  <Input id="motto" defaultValue={tenant?.settings.school_motto || "School Motto"} />
-                </div>
-                <div>
-                  <Label htmlFor="colors">Brand Colors</Label>
-                  <div className="mt-2 flex space-x-2">
-                    <input type="color" defaultValue={tenant?.settings.brand_colors?.[0] || "#3B82F6"} className="w-12 h-8 rounded border" />
-                    <input type="color" defaultValue={tenant?.settings.brand_colors?.[1] || "#10B981"} className="w-12 h-8 rounded border" />
-                    <input type="color" defaultValue={tenant?.settings.brand_colors?.[2] || "#F59E0B"} className="w-12 h-8 rounded border" />
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="users" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Users className="h-5 w-5 text-green-600" />
-                <span>User Management</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="text-center p-4 bg-blue-50 rounded-lg">
-                    <p className="text-2xl font-bold text-blue-600">45</p>
-                    <p className="text-sm text-blue-600">Total Users</p>
-                  </div>
-                  <div className="text-center p-4 bg-green-50 rounded-lg">
-                    <p className="text-2xl font-bold text-green-600">38</p>
-                    <p className="text-sm text-green-600">Active Users</p>
-                  </div>
-                  <div className="text-center p-4 bg-orange-50 rounded-lg">
-                    <p className="text-2xl font-bold text-orange-600">7</p>
-                    <p className="text-sm text-orange-600">Pending Invites</p>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  {[
-                    { role: 'Admin', count: 3, permissions: 'Full system access' },
-                    { role: 'Teacher', count: 25, permissions: 'Classroom and assessment management' },
-                    { role: 'Bursar', count: 2, permissions: 'Financial management' },
-                    { role: 'Parent', count: 180, permissions: 'View student progress and fees' }
-                  ].map((roleInfo, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div>
-                        <p className="font-medium text-gray-900">{roleInfo.role}</p>
-                        <p className="text-sm text-gray-600">{roleInfo.permissions}</p>
-                      </div>
-                      <div className="text-right">
-                        <Badge variant="secondary">{roleInfo.count} users</Badge>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="flex space-x-2">
-                  <Button>Add New User</Button>
-                  <Button variant="outline">Bulk Import</Button>
-                  <Button variant="outline">Export User List</Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Access Control</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <Label>Default Password Policy</Label>
-                  <div className="mt-2 space-y-2">
-                    <label className="flex items-center space-x-2">
-                      <input type="checkbox" defaultChecked />
-                      <span className="text-sm">Minimum 8 characters</span>
-                    </label>
-                    <label className="flex items-center space-x-2">
-                      <input type="checkbox" defaultChecked />
-                      <span className="text-sm">Require uppercase and lowercase letters</span>
-                    </label>
-                    <label className="flex items-center space-x-2">
-                      <input type="checkbox" defaultChecked />
-                      <span className="text-sm">Require at least one number</span>
-                    </label>
-                    <label className="flex items-center space-x-2">
-                      <input type="checkbox" />
-                      <span className="text-sm">Require special characters</span>
-                    </label>
-                  </div>
-                </div>
-
-                <div>
-                  <Label>Session Timeout</Label>
-                  <select className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2">
-                    <option>30 minutes</option>
-                    <option>1 hour</option>
-                    <option>4 hours</option>
-                    <option>8 hours</option>
-                  </select>
                 </div>
               </div>
             </CardContent>
@@ -286,13 +216,142 @@ export function Settings() {
         <TabsContent value="system" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Monitor className="h-5 w-5 text-purple-600" />
-                <span>System Health</span>
+              <CardTitle className="flex items-center justify-between">
+                <span className="flex items-center space-x-2">
+                  <Monitor className="h-5 w-5 text-purple-600" />
+                  <span>System Settings</span>
+                </span>
+                {hasChanges && (
+                  <Button onClick={handleSaveSystemSettings}>
+                    <Save className="h-4 w-4 mr-2" />
+                    Save Changes
+                  </Button>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 gap-6">
+              <div className="space-y-6">
+                <div>
+                  <Label>Application Theme</Label>
+                  <div className="mt-2 flex space-x-4">
+                    <label className="flex items-center space-x-2">
+                      <input 
+                        type="radio" 
+                        name="theme" 
+                        value="light"
+                        checked={theme === 'light'}
+                        onChange={() => {
+                          setTheme('light');
+                          handleSystemFormChange('theme', 'light');
+                        }}
+                      />
+                      <span className="text-sm">Light</span>
+                    </label>
+                    <label className="flex items-center space-x-2">
+                      <input 
+                        type="radio" 
+                        name="theme" 
+                        value="dark"
+                        checked={theme === 'dark'}
+                        onChange={() => {
+                          setTheme('dark');
+                          handleSystemFormChange('theme', 'dark');
+                        }}
+                      />
+                      <span className="text-sm">Dark</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div>
+                  <Label>Session Timeout (minutes)</Label>
+                  <select 
+                    className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2"
+                    value={systemForm.session_timeout}
+                    onChange={(e) => handleSystemFormChange('session_timeout', parseInt(e.target.value))}
+                  >
+                    <option value="15">15 minutes</option>
+                    <option value="30">30 minutes</option>
+                    <option value="60">1 hour</option>
+                    <option value="240">4 hours</option>
+                    <option value="480">8 hours</option>
+                  </select>
+                </div>
+
+                <div>
+                  <Label>Backup Frequency</Label>
+                  <select 
+                    className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2"
+                    value={systemForm.backup_frequency}
+                    onChange={(e) => handleSystemFormChange('backup_frequency', e.target.value)}
+                  >
+                    <option value="hourly">Hourly</option>
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                  </select>
+                </div>
+
+                <div>
+                  <Label>Password Policy</Label>
+                  <div className="mt-2 space-y-2">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>Minimum Length</Label>
+                        <Input
+                          type="number"
+                          min="6"
+                          max="20"
+                          value={systemForm.password_policy.min_length}
+                          onChange={(e) => handlePasswordPolicyChange('min_length', parseInt(e.target.value))}
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="flex items-center space-x-2">
+                        <input 
+                          type="checkbox" 
+                          checked={systemForm.password_policy.require_uppercase}
+                          onChange={(e) => handlePasswordPolicyChange('require_uppercase', e.target.checked)}
+                        />
+                        <span className="text-sm">Require uppercase letters</span>
+                      </label>
+                      <label className="flex items-center space-x-2">
+                        <input 
+                          type="checkbox" 
+                          checked={systemForm.password_policy.require_lowercase}
+                          onChange={(e) => handlePasswordPolicyChange('require_lowercase', e.target.checked)}
+                        />
+                        <span className="text-sm">Require lowercase letters</span>
+                      </label>
+                      <label className="flex items-center space-x-2">
+                        <input 
+                          type="checkbox" 
+                          checked={systemForm.password_policy.require_numbers}
+                          onChange={(e) => handlePasswordPolicyChange('require_numbers', e.target.checked)}
+                        />
+                        <span className="text-sm">Require numbers</span>
+                      </label>
+                      <label className="flex items-center space-x-2">
+                        <input 
+                          type="checkbox" 
+                          checked={systemForm.password_policy.require_special}
+                          onChange={(e) => handlePasswordPolicyChange('require_special', e.target.checked)}
+                        />
+                        <span className="text-sm">Require special characters</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>System Health</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
                     <div>
@@ -329,105 +388,20 @@ export function Settings() {
                   </div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Backup & Maintenance</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <Label>Automatic Backups</Label>
-                  <div className="mt-2 space-y-2">
-                    <label className="flex items-center space-x-2">
-                      <input type="checkbox" defaultChecked />
-                      <span className="text-sm">Daily database backups</span>
-                    </label>
-                    <label className="flex items-center space-x-2">
-                      <input type="checkbox" defaultChecked />
-                      <span className="text-sm">Weekly full system backups</span>
-                    </label>
-                    <label className="flex items-center space-x-2">
-                      <input type="checkbox" />
-                      <span className="text-sm">Monthly off-site backups</span>
-                    </label>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label>Last Database Backup</Label>
-                    <p className="text-sm text-gray-600 mt-1">{systemHealth.database.lastBackup}</p>
-                  </div>
-                  <div>
-                    <Label>Available Storage</Label>
-                    <p className="text-sm text-gray-600 mt-1">{systemHealth.storage.available}</p>
-                  </div>
-                </div>
-
-                <div className="flex space-x-2">
-                  <Button variant="outline">
-                    <Download className="h-4 w-4 mr-2" />
-                    Run Backup Now
-                  </Button>
-                  <Button variant="outline">
-                    <Database className="h-4 w-4 mr-2" />
-                    System Diagnostics
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Application Settings</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <Label>Theme</Label>
-                  <div className="mt-2 flex space-x-4">
-                    <label className="flex items-center space-x-2">
-                      <input 
-                        type="radio" 
-                        name="theme" 
-                        value="light"
-                        checked={theme === 'light'}
-                        onChange={() => setTheme('light')}
-                      />
-                      <span className="text-sm">Light</span>
-                    </label>
-                    <label className="flex items-center space-x-2">
-                      <input 
-                        type="radio" 
-                        name="theme" 
-                        value="dark"
-                        checked={theme === 'dark'}
-                        onChange={() => setTheme('dark')}
-                      />
-                      <span className="text-sm">Dark</span>
-                    </label>
-                  </div>
-                </div>
-
-                <div>
-                  <Label>Language</Label>
-                  <select className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2">
-                    <option>English</option>
-                    <option>Kiswahili</option>
-                  </select>
-                </div>
-
-                <div>
-                  <Label>Time Zone</Label>
-                  <select className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2">
-                    <option>Africa/Nairobi (EAT)</option>
-                    <option>UTC</option>
-                  </select>
-                </div>
+              <div className="mt-6 flex flex-wrap gap-2">
+                <Button variant="outline">
+                  <Download className="h-4 w-4 mr-2" />
+                  Run Backup Now
+                </Button>
+                <Button variant="outline">
+                  <Database className="h-4 w-4 mr-2" />
+                  System Diagnostics
+                </Button>
+                <Button variant="outline">
+                  <Monitor className="h-4 w-4 mr-2" />
+                  Performance Report
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -442,16 +416,16 @@ export function Settings() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-6">
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div>
                     <Label>Two-Factor Authentication</Label>
-                    <div className="mt-2">
+                    <div className="mt-2 space-y-2">
                       <label className="flex items-center space-x-2">
                         <input type="checkbox" defaultChecked />
                         <span className="text-sm">Require 2FA for admin users</span>
                       </label>
-                      <label className="flex items-center space-x-2 mt-2">
+                      <label className="flex items-center space-x-2">
                         <input type="checkbox" />
                         <span className="text-sm">Require 2FA for all users</span>
                       </label>
@@ -474,8 +448,8 @@ export function Settings() {
                 </div>
 
                 <div>
-                  <Label>Data Encryption</Label>
-                  <div className="mt-2 grid grid-cols-3 gap-4 text-center">
+                  <Label>Data Encryption Status</Label>
+                  <div className="mt-2 grid grid-cols-1 lg:grid-cols-3 gap-4 text-center">
                     <div className="p-3 bg-green-50 rounded-lg">
                       <CheckCircle className="h-6 w-6 text-green-600 mx-auto mb-2" />
                       <p className="text-sm font-medium text-green-800">Data at Rest</p>
@@ -491,75 +465,6 @@ export function Settings() {
                       <p className="text-sm font-medium text-green-800">API Access</p>
                       <p className="text-xs text-green-600">JWT Tokens</p>
                     </div>
-                  </div>
-                </div>
-
-                <div>
-                  <Label>Audit Logging</Label>
-                  <div className="mt-2 space-y-2">
-                    <label className="flex items-center space-x-2">
-                      <input type="checkbox" defaultChecked />
-                      <span className="text-sm">Log all user actions</span>
-                    </label>
-                    <label className="flex items-center space-x-2">
-                      <input type="checkbox" defaultChecked />
-                      <span className="text-sm">Log system changes</span>
-                    </label>
-                    <label className="flex items-center space-x-2">
-                      <input type="checkbox" defaultChecked />
-                      <span className="text-sm">Log data exports</span>
-                    </label>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>API Security</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <Label>API Rate Limiting</Label>
-                  <div className="mt-2 grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm text-gray-600">Requests per minute</label>
-                      <Input type="number" defaultValue="100" />
-                    </div>
-                    <div>
-                      <label className="text-sm text-gray-600">Burst limit</label>
-                      <Input type="number" defaultValue="200" />
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <Label>API Keys</Label>
-                  <div className="mt-2 space-y-3">
-                    {[
-                      { name: 'M-PESA Integration', scope: 'payments:read,payments:write', lastUsed: '2 hours ago' },
-                      { name: 'Parent Mobile App', scope: 'students:read,attendance:read', lastUsed: '1 hour ago' }
-                    ].map((key, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div>
-                          <p className="font-medium text-gray-900">{key.name}</p>
-                          <p className="text-sm text-gray-600">Scope: {key.scope}</p>
-                          <p className="text-xs text-gray-500">Last used: {key.lastUsed}</p>
-                        </div>
-                        <div className="flex space-x-2">
-                          <Button variant="outline" size="sm">
-                            <Key className="h-4 w-4 mr-1" />
-                            Rotate
-                          </Button>
-                          <Button variant="outline" size="sm">
-                            <Eye className="h-4 w-4 mr-1" />
-                            View
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
                   </div>
                 </div>
               </div>
@@ -579,7 +484,7 @@ export function Settings() {
               <div className="space-y-6">
                 <div>
                   <h4 className="font-semibold text-gray-900 mb-3">Notification Channels</h4>
-                  <div className="grid grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div className="space-y-3">
                       <div className="flex items-center justify-between p-3 border rounded-lg">
                         <div className="flex items-center space-x-2">
@@ -631,33 +536,8 @@ export function Settings() {
                 </div>
 
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-3">Notification Templates</h4>
-                  <div className="space-y-3">
-                    {[
-                      { name: 'Student Absent', channel: 'SMS', status: 'Active' },
-                      { name: 'Fee Payment Received', channel: 'SMS + Email', status: 'Active' },
-                      { name: 'Report Card Ready', channel: 'Email', status: 'Active' },
-                      { name: 'Transport Alert', channel: 'SMS', status: 'Active' },
-                    ].map((template, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div>
-                          <p className="font-medium text-gray-900">{template.name}</p>
-                          <p className="text-sm text-gray-600">{template.channel}</p>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Badge variant={template.status === 'Active' ? 'default' : 'secondary'}>
-                            {template.status}
-                          </Badge>
-                          <Button variant="outline" size="sm">Edit</Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
                   <h4 className="font-semibold text-gray-900 mb-3">Delivery Settings</h4>
-                  <div className="grid grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div>
                       <Label>Quiet Hours</Label>
                       <div className="mt-2 grid grid-cols-2 gap-2">
@@ -722,47 +602,6 @@ export function Settings() {
                     </div>
                   );
                 })}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Webhook Configuration</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <Label>Webhook Endpoints</Label>
-                  <div className="mt-2 space-y-3">
-                    {[
-                      { url: 'https://api.school.ac.ke/webhooks/mpesa', events: ['payment.completed', 'payment.failed'] },
-                      { url: 'https://api.school.ac.ke/webhooks/attendance', events: ['attendance.marked'] }
-                    ].map((webhook, index) => (
-                      <div key={index} className="p-3 border rounded-lg">
-                        <div className="flex items-center justify-between mb-2">
-                          <p className="font-medium text-gray-900 font-mono text-sm">{webhook.url}</p>
-                          <div className="flex space-x-2">
-                            <Badge variant="outline">Active</Badge>
-                            <Button variant="outline" size="sm">Test</Button>
-                          </div>
-                        </div>
-                        <div className="flex space-x-1">
-                          {webhook.events.map((event) => (
-                            <Badge key={event} variant="secondary" className="text-xs">
-                              {event}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Webhook
-                </Button>
               </div>
             </CardContent>
           </Card>

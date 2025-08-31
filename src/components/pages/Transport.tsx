@@ -895,7 +895,7 @@ export function Transport() {
           <DialogHeader>
             <DialogTitle>Live Route Tracking - {selectedRoute?.name}</DialogTitle>
           </DialogHeader>
-          <LiveTrackingInterface route={selectedRoute} />
+          {selectedRoute && <LiveTrackingInterface route={selectedRoute} />}
         </DialogContent>
       </Dialog>
 
@@ -905,7 +905,7 @@ export function Transport() {
           <DialogHeader>
             <DialogTitle>Create Safety Alert</DialogTitle>
           </DialogHeader>
-          <SafetyAlertForm alertData={alertData} onClose={() => setShowSafetyAlert(false)} />
+          {alertData && <SafetyAlertForm alertData={alertData} onClose={() => setShowSafetyAlert(false)} />}
         </DialogContent>
       </Dialog>
     </div>
@@ -967,4 +967,3 @@ const TransportEventForm = ({ event, onSave, onCancel }: { event: any; onSave: (
       </div>
     </form>
   );
-}

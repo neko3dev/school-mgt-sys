@@ -108,6 +108,30 @@ export function Students() {
     });
   };
 
+  const handleBulkDelete = () => {
+    if (confirm(`Delete ${selectedStudents.length} students?`)) {
+      selectedStudents.forEach(id => deleteStudent(id));
+      setSelectedStudents([]);
+    }
+  };
+
+  const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
+
+  const toggleStudentSelection = (studentId: string) => {
+    setSelectedStudents(prev => 
+      prev.includes(studentId) 
+        ? prev.filter(id => id !== studentId)
+        : [...prev, studentId]
+    );
+  };
+
+  const selectAllStudents = () => {
+    setSelectedStudents(filteredStudents.map(s => s.id));
+  };
+
+  const clearSelection = () => {
+    setSelectedStudents([]);
+  };
   const StudentCard = ({ student }: { student: any }) => {
     const classroom = getClassroom(student.classroom_id);
     
@@ -116,6 +140,12 @@ export function Students() {
         <CardContent className="p-6">
           <div className="flex items-start justify-between">
             <div className="flex items-center space-x-4">
+              <input
+                type="checkbox"
+                checked={selectedStudents.includes(student.id)}
+                onChange={() => toggleStudentSelection(student.id)}
+                className="rounded border-gray-300"
+              />
               <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
                 <span className="text-blue-700 font-semibold">
                   {student.name.split(' ').map((n: string) => n[0]).join('')}
@@ -142,7 +172,7 @@ export function Students() {
                 </div>
               </div>
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="flex flex-wrap items-center gap-2">
               <Dialog>
                 <DialogTrigger asChild>
                   <Button variant="outline" size="sm">
@@ -308,7 +338,35 @@ export function Students() {
         </div>
       </div>
 
-      <div className="flex items-center space-x-4">
+      {selectedStudents.length > 0 && (
+        <Card className="border-blue-200 bg-blue-50">
+          <CardContent className="p-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center space-x-2">
+                <Users className="h-4 w-4 text-blue-600" />
+                <span className="text-blue-800 font-medium">
+                  {selectedStudents.length} students selected
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button size="sm" onClick={handleBulkExport}>
+                  <Download className="h-4 w-4 mr-2" />
+                  Export Selected
+                </Button>
+                <Button variant="destructive" size="sm" onClick={handleBulkDelete}>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete Selected
+                </Button>
+                <Button variant="outline" size="sm" onClick={clearSelection}>
+                  Clear Selection
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <Input
@@ -318,28 +376,33 @@ export function Students() {
             className="pl-10"
           />
         </div>
-        <Button variant="outline">
-          <Download className="h-4 w-4 mr-2" />
-          Export List
-        </Button>
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button variant="outline">
-              <FileText className="h-4 w-4 mr-2" />
-              Generate Reports
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-3xl">
-            <DialogHeader>
-              <DialogTitle>Student Reports</DialogTitle>
-            </DialogHeader>
-            <ReportExporter 
-              data={filteredStudents} 
-              title="Student Reports" 
-              type="students"
-            />
-          </DialogContent>
-        </Dialog>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" size="sm" onClick={selectedStudents.length === filteredStudents.length ? clearSelection : selectAllStudents}>
+            {selectedStudents.length === filteredStudents.length ? 'Deselect All' : 'Select All'}
+          </Button>
+          <Button variant="outline" onClick={handleBulkExport}>
+            <Download className="h-4 w-4 mr-2" />
+            Export List
+          </Button>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <FileText className="h-4 w-4 mr-2" />
+                Generate Reports
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-3xl">
+              <DialogHeader>
+                <DialogTitle>Student Reports</DialogTitle>
+              </DialogHeader>
+              <ReportExporter 
+                data={filteredStudents} 
+                title="Student Reports" 
+                type="students"
+              />
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>

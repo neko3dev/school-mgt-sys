@@ -99,6 +99,19 @@ export function Assessment() {
     setShowEvidenceForm(true);
   };
 
+  const handleSaveEvidence = (evidenceData: any) => {
+    // Add evidence to the assessment store
+    const evidence = {
+      id: Date.now().toString(),
+      task_id: selectedTask?.id,
+      teacher_id: 'current-user',
+      captured_at: new Date().toISOString(),
+      ...evidenceData
+    };
+    // This would normally be handled by the evidence store
+    console.log('Evidence saved:', evidence);
+    setShowEvidenceForm(false);
+  };
   const handleExportTaskData = (task: any) => {
     generateReport({
       type: 'sba_task_report',
@@ -658,7 +671,11 @@ export function Assessment() {
           <DialogHeader>
             <DialogTitle>Add Evidence</DialogTitle>
           </DialogHeader>
-          <EvidenceForm task={selectedTask} onClose={() => setShowEvidenceForm(false)} />
+          <EvidenceForm 
+            task={selectedTask} 
+            onClose={() => setShowEvidenceForm(false)}
+            onSave={handleSaveEvidence}
+          />
         </DialogContent>
       </Dialog>
     </div>

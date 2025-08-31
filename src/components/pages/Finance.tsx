@@ -765,16 +765,9 @@ export function Finance() {
             <DialogTitle>Process Payment</DialogTitle>
           </DialogHeader>
           {invoiceForPayment && (
-            <MPESAIntegration 
+            <MPESAPayment 
               invoice={invoiceForPayment} 
-              onPaymentComplete={(payment) => {
-                // Update invoice balance
-                updateInvoice(invoiceForPayment.id, { 
-                  balance: 0, 
-                  status: 'paid' 
-                });
-                setShowPaymentDialog(false);
-              }}
+              student={mockLearners.find(s => s.id === invoiceForPayment.learner_id)}
             />
           )}
         </DialogContent>

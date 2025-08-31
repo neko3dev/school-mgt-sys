@@ -240,7 +240,7 @@ export const useTransport = create<TransportState>((set) => ({
 }))
 
 // Reports Store
-interface ReportsState {
+export interface ReportsState {
   reports: any[]
   templates: any[]
   exportQueue: any[]
@@ -307,6 +307,92 @@ export const useReports = create<ReportsState>((set) => ({
   setError: (error) => set({ error }),
 }))
 
+// Events Store
+interface EventsState {
+  events: any[]
+  selectedEvent: any | null
+  isLoading: boolean
+  error: string | null
+  addEvent: (event: any) => void
+  updateEvent: (id: string, updates: any) => void
+  deleteEvent: (id: string) => void
+  setSelectedEvent: (event: any) => void
+  setLoading: (loading: boolean) => void
+  setError: (error: string | null) => void
+}
+
+export const useEvents = create<EventsState>((set) => ({
+  events: [],
+  selectedEvent: null,
+  isLoading: false,
+  error: null,
+  addEvent: (event) => set((state) => ({ 
+    events: [...state.events, { ...event, id: Date.now().toString() }] 
+  })),
+  updateEvent: (id, updates) => set((state) => ({
+    events: state.events.map(e => e.id === id ? { ...e, ...updates } : e)
+  })),
+  deleteEvent: (id) => set((state) => ({
+    events: state.events.filter(e => e.id !== id)
+  })),
+  setSelectedEvent: (event) => set({ selectedEvent: event }),
+  setLoading: (loading) => set({ isLoading: loading }),
+  setError: (error) => set({ error }),
+}))
+
+// Settings Store
+interface SettingsState {
+  schoolSettings: any
+  systemSettings: any
+  userSettings: any
+  updateSchoolSettings: (settings: any) => void
+  updateSystemSettings: (settings: any) => void
+  updateUserSettings: (settings: any) => void
+}
+
+export const useSettings = create<SettingsState>((set) => ({
+  schoolSettings: {
+    name: 'Karagita Primary School',
+    code: '01-01-001-001',
+    county: 'Nairobi',
+    subcounty: 'Dagoretti North',
+    motto: 'Excellence Through Education',
+    academic_year: '2024',
+    current_term: 1,
+    timezone: 'Africa/Nairobi',
+    language: 'en'
+  },
+  systemSettings: {
+    theme: 'light',
+    notifications: true,
+    backup_frequency: 'daily',
+    session_timeout: 30,
+    password_policy: {
+      min_length: 8,
+      require_uppercase: true,
+      require_lowercase: true,
+      require_numbers: true,
+      require_special: false
+    }
+  },
+  userSettings: {
+    dashboard_layout: 'default',
+    notification_preferences: {
+      email: true,
+      sms: true,
+      push: false
+    }
+  },
+  updateSchoolSettings: (settings) => set((state) => ({
+    schoolSettings: { ...state.schoolSettings, ...settings }
+  })),
+  updateSystemSettings: (settings) => set((state) => ({
+    systemSettings: { ...state.systemSettings, ...settings }
+  })),
+  updateUserSettings: (settings) => set((state) => ({
+    userSettings: { ...state.userSettings, ...settings }
+  })),
+}))
 // Staff Store
 interface StaffState {
   staff: any[]

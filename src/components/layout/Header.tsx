@@ -32,19 +32,19 @@ export function Header() {
   };
 
   return (
-    <header className="bg-white border-b border-gray-200 px-6 py-4">
+    <header className="bg-white border-b border-gray-200 px-3 lg:px-6 py-3 lg:py-4">
       <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-2 lg:space-x-4 flex-1 min-w-0">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
               placeholder="Search students, tasks, invoices..."
-              className="pl-10 w-80"
+              className="pl-10 w-32 sm:w-48 lg:w-80"
             />
           </div>
           
           {/* PWA Status Indicators */}
-          <div className="flex items-center space-x-2">
+          <div className="hidden sm:flex items-center space-x-2">
             <div className="flex items-center space-x-1">
               {isOnline ? (
                 <Wifi className="h-4 w-4 text-green-500" />
@@ -64,24 +64,24 @@ export function Header() {
               className="text-gray-500"
             >
               <Sync className={`h-4 w-4 ${syncStatus === 'syncing' ? 'animate-spin' : ''}`} />
-              {syncStatus === 'syncing' && <span className="ml-2">Syncing...</span>}
+              {syncStatus === 'syncing' && <span className="ml-2 hidden lg:inline">Syncing...</span>}
             </Button>
 
             {syncStatus === 'error' && (
               <Badge variant="destructive" className="flex items-center space-x-1">
                 <AlertTriangle className="h-3 w-3" />
-                <span>Sync Error</span>
+                <span className="hidden lg:inline">Sync Error</span>
               </Badge>
             )}
           </div>
         </div>
 
-        <div className="flex items-center space-x-4">
-          <div className="text-right">
+        <div className="flex items-center space-x-2 lg:space-x-4">
+          <div className="text-right hidden sm:block">
             <p className="text-sm font-medium text-gray-900">
               Term {tenant?.settings.current_term || 1}, {tenant?.settings.academic_year || '2024'}
             </p>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-gray-500 truncate max-w-32 lg:max-w-none">
               {tenant?.name || 'School Name'}
             </p>
           </div>
@@ -93,9 +93,14 @@ export function Header() {
             </Badge>
           </Button>
 
-          <Button variant="ghost" onClick={logout} className="text-gray-500 hover:text-gray-900">
+          <Button variant="ghost" onClick={logout} className="text-gray-500 hover:text-gray-900 hidden sm:flex">
             <LogOut className="h-4 w-4 mr-2" />
-            Sign Out
+            <span className="hidden lg:inline">Sign Out</span>
+          </Button>
+          
+          {/* Mobile Sign Out */}
+          <Button variant="ghost" size="icon" onClick={logout} className="sm:hidden">
+            <LogOut className="h-4 w-4" />
           </Button>
         </div>
       </div>

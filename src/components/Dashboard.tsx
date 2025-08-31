@@ -17,6 +17,7 @@ import { Communications } from './pages/Communications';
 import { Analytics } from './pages/Analytics';
 import { Library } from './pages/Library';
 import { Inventory } from './pages/Inventory';
+import { Events } from './pages/Events';
 import { useUI } from '@/store';
 
 const pages = {
@@ -29,6 +30,7 @@ const pages = {
   timetable: Timetable,
   welfare: Welfare,
   communications: Communications,
+  events: Events,
   reports: Reports,
   privacy: Privacy,
   settings: Settings,
@@ -45,11 +47,15 @@ export function Dashboard() {
   const CurrentPageComponent = pages[currentPage as keyof typeof pages];
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-gray-50 overflow-hidden">
       <Sidebar currentPage={currentPage} onNavigate={setCurrentPage} />
-      <div className={`flex-1 flex flex-col transition-all duration-300 ${sidebarCollapsed ? 'ml-16' : 'ml-64'}`}>
+      <div className={cn(
+        "flex-1 flex flex-col transition-all duration-300",
+        "lg:ml-0", // Reset margin on mobile
+        sidebarCollapsed ? "lg:ml-16" : "lg:ml-64"
+      )}>
         <Header />
-        <main className="flex-1 overflow-auto p-6">
+        <main className="flex-1 overflow-auto p-3 lg:p-6">
           <CurrentPageComponent />
         </main>
       </div>

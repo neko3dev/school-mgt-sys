@@ -13,9 +13,10 @@ import { Save, X, Upload, Camera, Mic, FileText } from 'lucide-react';
 interface EvidenceFormProps {
   task: any;
   onClose: () => void;
+  onSave: (evidenceData: any) => void;
 }
 
-export function EvidenceForm({ task, onClose }: EvidenceFormProps) {
+export function EvidenceForm({ task, onClose, onSave }: EvidenceFormProps) {
   const [formData, setFormData] = useState({
     learner_id: '',
     proficiency_level: 'approaching',
@@ -25,20 +26,10 @@ export function EvidenceForm({ task, onClose }: EvidenceFormProps) {
     files: []
   });
 
-  const { addEvidence } = useAssessment();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    const evidence = {
-      id: Date.now().toString(),
-      task_id: task.id,
-      teacher_id: 'current-user',
-      captured_at: new Date().toISOString(),
-      ...formData
-    };
-
-    addEvidence(evidence);
+    onSave(formData);
     onClose();
   };
 
