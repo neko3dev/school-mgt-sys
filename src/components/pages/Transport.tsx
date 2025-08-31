@@ -32,6 +32,91 @@ import {
   FileText
 } from 'lucide-react';
 
+const LiveTrackingInterface = ({ route }: { route: any }) => {
+  const [vehicleStatus, setVehicleStatus] = useState({
+    location: 'Karagita Shopping Center',
+    speed: 35,
+    studentsOnBoard: 12,
+    nextStop: 'Karagita Primary School',
+    eta: '7 minutes',
+    status: 'on_route'
+  });
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Vehicle Status - {route.name}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="text-center p-3 bg-blue-50 rounded-lg">
+              <MapPin className="h-6 w-6 text-blue-600 mx-auto mb-2" />
+              <p className="font-semibold text-blue-800">Current Location</p>
+              <p className="text-sm text-blue-600">{vehicleStatus.location}</p>
+            </div>
+            <div className="text-center p-3 bg-green-50 rounded-lg">
+              <Clock className="h-6 w-6 text-green-600 mx-auto mb-2" />
+              <p className="font-semibold text-green-800">ETA Next Stop</p>
+              <p className="text-sm text-green-600">{vehicleStatus.eta}</p>
+            </div>
+            <div className="text-center p-3 bg-purple-50 rounded-lg">
+              <Users className="h-6 w-6 text-purple-600 mx-auto mb-2" />
+              <p className="font-semibold text-purple-800">Students On Board</p>
+              <p className="text-sm text-purple-600">{vehicleStatus.studentsOnBoard}</p>
+            </div>
+            <div className="text-center p-3 bg-orange-50 rounded-lg">
+              <Navigation className="h-6 w-6 text-orange-600 mx-auto mb-2" />
+              <p className="font-semibold text-orange-800">Speed</p>
+              <p className="text-sm text-orange-600">{vehicleStatus.speed} km/h</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+const SafetyAlertForm = ({ alertData, onClose }: { alertData: any; onClose: () => void }) => {
+  const [formData, setFormData] = useState({
+    type: 'emergency',
+    priority: 'high',
+    message: '',
+    location: '',
+    description: ''
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    alert('Safety alert sent to all recipients');
+    onClose();
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <Label htmlFor="description">Alert Description *</Label>
+        <Textarea
+          id="description"
+          value={formData.description}
+          onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+          placeholder="Describe the emergency situation..."
+          required
+        />
+      </div>
+      <div className="flex space-x-2">
+        <Button type="submit" variant="destructive">
+          <AlertTriangle className="h-4 w-4 mr-2" />
+          Send Alert
+        </Button>
+        <Button type="button" variant="outline" onClick={onClose}>
+          Cancel
+        </Button>
+      </div>
+    </form>
+  );
+};
+
 export function Transport() {
   const [activeTab, setActiveTab] = useState('routes');
   const [showRouteForm, setShowRouteForm] = useState(false);
@@ -967,3 +1052,4 @@ const TransportEventForm = ({ event, onSave, onCancel }: { event: any; onSave: (
       </div>
     </form>
   );
+};

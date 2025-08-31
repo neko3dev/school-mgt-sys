@@ -33,6 +33,57 @@ import {
   TrendingUp
 } from 'lucide-react';
 
+const MaintenanceForm = ({ asset, onClose }: { asset: any; onClose: () => void }) => {
+  const [formData, setFormData] = useState({
+    type: 'preventive',
+    description: '',
+    scheduled_date: new Date().toISOString().split('T')[0],
+    estimated_cost: 0,
+    technician: ''
+  });
+
+  const { addMaintenance } = useInventory();
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const maintenance = {
+      id: Date.now().toString(),
+      asset_id: asset.id,
+      status: 'scheduled',
+      created_at: new Date().toISOString(),
+      ...formData
+    };
+
+    addMaintenance(maintenance);
+    alert('Maintenance scheduled successfully');
+    onClose();
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <Label htmlFor="description">Description *</Label>
+        <Textarea
+          id="description"
+          value={formData.description}
+          onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+          required
+        />
+      </div>
+      <div className="flex space-x-2">
+        <Button type="submit">
+          <Save className="h-4 w-4 mr-2" />
+          Schedule Maintenance
+        </Button>
+        <Button type="button" variant="outline" onClick={onClose}>
+          Cancel
+        </Button>
+      </div>
+    </form>
+  );
+};
+
 export function Inventory() {
   const [activeTab, setActiveTab] = useState('assets');
   const [searchTerm, setSearchTerm] = useState('');
