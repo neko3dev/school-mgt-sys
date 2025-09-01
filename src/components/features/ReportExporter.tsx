@@ -174,40 +174,169 @@ export function ReportExporter({ data, title, type, onClose }: ReportExporterPro
     setIsGenerating(true);
     setProgress(0);
 
-    // Simulate report generation
-    const steps = ['Preparing data...', 'Applying template...', 'Generating content...', 'Finalizing export...'];
+    try {
+      // Simulate report generation
+      const steps = ['Preparing data...', 'Applying template...', 'Generating content...', 'Finalizing export...'];
     
-    for (let i = 0; i < steps.length; i++) {
-      await new Promise(resolve => setTimeout(resolve, 800));
-      setProgress(((i + 1) / steps.length) * 100);
+      for (let i = 0; i < steps.length; i++) {
+        await new Promise(resolve => setTimeout(resolve, 800));
+        setProgress(((i + 1) / steps.length) * 100);
+      }
+
+      const report = {
+        id: Date.now().toString(),
+        title: template.name,
+        type: type,
+        format: format.toLowerCase(),
+        data,
+        status: 'completed',
+        file_url: `/reports/${Date.now()}.${format.toLowerCase()}`,
+        file_size: Math.floor(Math.random() * 5000) + 1000,
+        created_at: new Date().toISOString(),
+        hash: `sha256:${Math.random().toString(36).substr(2, 16)}`
+      };
+
+      generateReport(report);
+      setGeneratedReport(report);
+
+      // Generate actual file content based on format
+      await downloadFile(template.name, format, data);
+      
+    } catch (error) {
+      console.error('Report generation failed:', error);
+      alert('Report generation failed. Please try again.');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const downloadFile = async (filename: string, format: string, data: any) => {
+    let content = '';
+    let mimeType = '';
+    let extension = '';
+
+    switch (format.toLowerCase()) {
+      case 'pdf':
+        content = generatePDFContent(filename, data);
+        mimeType = 'application/pdf';
+        extension = 'pdf';
+        break;
+      case 'xlsx':
+      case 'excel':
+        content = generateExcelContent(data);
+        mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+        extension = 'xlsx';
+        break;
+      case 'csv':
+        content = generateCSVContent(data);
+        mimeType = 'text/csv';
+        extension = 'csv';
+        break;
+      case 'json':
+        content = JSON.stringify({
+          report: filename,
+          generated: new Date().toISOString(),
+          data: data
+        }, null, 2);
+        mimeType = 'application/json';
+        extension = 'json';
+        break;
+      default:
+        content = JSON.stringify(data, null, 2);
+        mimeType = 'text/plain';
+        extension = 'txt';
     }
 
-    const report = {
-      id: Date.now().toString(),
-      title: template.name,
-      type: type,
-      format: format.toLowerCase(),
-      data,
-      status: 'completed',
-      file_url: `/reports/${Date.now()}.${format.toLowerCase()}`,
-      file_size: Math.floor(Math.random() * 5000) + 1000,
-      created_at: new Date().toISOString(),
-      hash: `sha256:${Math.random().toString(36).substr(2, 16)}`
-    };
-
-    generateReport(report);
-    setGeneratedReport(report);
-    setIsGenerating(false);
-
-    // Simulate file download
-    const blob = new Blob([`Generated ${format} report: ${template.name}`], 
-      { type: format === 'PDF' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const blob = new Blob([content], { type: mimeType });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${template.name.toLowerCase().replace(/\s+/g, '-')}.${format.toLowerCase()}`;
+    a.download = `${filename.toLowerCase().replace(/\s+/g, '-')}.${extension}`;
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  };
+
+  const generatePDFContent = (title: string, data: any) => {
+    return `%PDF-1.4
+1 0 obj
+<<
+/Type /Catalog
+/Pages 2 0 R
+>>
+endobj
+
+2 0 obj
+<<
+/Type /Pages
+/Kids [3 0 R]
+/Count 1
+>>
+endobj
+
+3 0 obj
+<<
+/Type /Page
+/Parent 2 0 R
+/MediaBox [0 0 612 792]
+/Contents 4 0 R
+>>
+endobj
+
+4 0 obj
+<<
+/Length 200
+>>
+stream
+BT
+/F1 16 Tf
+72 720 Td
+(${title}) Tj
+0 -30 Td
+/F1 12 Tf
+(Generated: ${new Date().toLocaleString()}) Tj
+0 -20 Td
+(Records: ${Array.isArray(data) ? data.length : 1}) Tj
+ET
+endstream
+endobj
+
+xref
+0 5
+0000000000 65535 f 
+0000000009 00000 n 
+0000000074 00000 n 
+0000000120 00000 n 
+0000000179 00000 n 
+trailer
+<<
+/Size 5
+/Root 1 0 R
+>>
+startxref
+400
+%%EOF`;
+  };
+
+  const generateExcelContent = (data: any) => {
+    if (Array.isArray(data) && data.length > 0) {
+      const headers = Object.keys(data[0]).join('\t');
+      const rows = data.map(item => Object.values(item).join('\t')).join('\n');
+      return `${headers}\n${rows}`;
+    }
+    return `Report\t${new Date().toISOString()}\nData\t${JSON.stringify(data)}`;
+  };
+
+  const generateCSVContent = (data: any) => {
+    if (Array.isArray(data) && data.length > 0) {
+      const headers = Object.keys(data[0]).join(',');
+      const rows = data.map(item => 
+        Object.values(item).map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')
+      ).join('\n');
+      return `${headers}\n${rows}`;
+    }
+    return `"Report","Generated","Records"\n"${new Date().toISOString()}","${new Date().toISOString()}","${Array.isArray(data) ? data.length : 1}"`;
   };
 
   const handleCustomGenerate = async () => {

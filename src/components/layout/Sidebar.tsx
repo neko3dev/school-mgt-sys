@@ -96,15 +96,15 @@ export function Sidebar({ currentPage, onNavigate }: SidebarProps) {
       {/* Sidebar */}
       <div className={cn(
         "fixed left-0 top-0 h-full bg-white border-r border-gray-200 transition-all duration-300 z-50",
-        "lg:z-30", // Lower z-index on desktop
+        "lg:z-30",
         // Desktop behavior
         "hidden lg:block",
         sidebarCollapsed ? "lg:w-16" : "lg:w-64",
         // Mobile behavior
-        mobileMenuOpen ? "block w-64" : "hidden lg:block"
+        mobileMenuOpen ? "block w-64 shadow-xl" : "hidden lg:block"
       )}>
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          {!sidebarCollapsed && (
+          {(!sidebarCollapsed || mobileMenuOpen) && (
             <div className="flex items-center space-x-2">
               <div className="p-2 bg-blue-600 rounded-lg">
                 <GraduationCap className="h-5 w-5 text-white" />
@@ -113,6 +113,11 @@ export function Sidebar({ currentPage, onNavigate }: SidebarProps) {
                 <h1 className="text-lg font-semibold text-gray-900 truncate">CBC Manager</h1>
                 <p className="text-xs text-gray-500 truncate">{tenant?.name || 'School'}</p>
               </div>
+            </div>
+          )}
+          {sidebarCollapsed && !mobileMenuOpen && (
+            <div className="p-2 bg-blue-600 rounded-lg mx-auto">
+              <GraduationCap className="h-5 w-5 text-white" />
             </div>
           )}
           <Button

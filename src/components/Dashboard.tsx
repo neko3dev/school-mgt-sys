@@ -19,6 +19,7 @@ import { Library } from './pages/Library';
 import { Inventory } from './pages/Inventory';
 import { Events } from './pages/Events';
 import { useUI } from '@/store';
+import { cn } from '@/lib/utils';
 
 const pages = {
   overview: Overview,

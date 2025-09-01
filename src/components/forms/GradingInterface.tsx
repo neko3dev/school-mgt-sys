@@ -17,7 +17,7 @@ export function GradingInterface({ task, onClose }: GradingInterfaceProps) {
   const [grades, setGrades] = useState<Record<string, any>>({});
   const [selectedStudent, setSelectedStudent] = useState<string>('');
   
-  const { updateEvidence } = useAssessment();
+  const { addEvidence } = useAssessment();
   
   const students = mockLearners.filter(s => s.status === 'active');
   const evidence = mockAssessmentEvidence.filter(e => e.task_id === task?.id);
@@ -31,11 +31,25 @@ export function GradingInterface({ task, onClose }: GradingInterfaceProps) {
 
   const handleSaveGrades = () => {
     Object.entries(grades).forEach(([studentId, grade]) => {
-      const existingEvidence = evidence.find(e => e.learner_id === studentId);
-      if (existingEvidence) {
-        updateEvidence(existingEvidence.id, grade);
-      }
+      const evidenceData = {
+        task_id: task.id,
+        learner_id: studentId,
+        proficiency_level: grade.level,
+        score: grade.score,
+        comment: grade.comment,
+        files: [],
+        captured_at: new Date().toISOString()
+      };
+      addEvidence(evidenceData);
     });
+    
+    // Show success notification
+    const notification = document.createElement('div');
+    notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+    notification.textContent = `Grades saved for ${Object.keys(grades).length} students`;
+    document.body.appendChild(notification);
+    setTimeout(() => document.body.removeChild(notification), 3000);
+    
     onClose();
   };
 
@@ -93,7 +107,7 @@ export function GradingInterface({ task, onClose }: GradingInterfaceProps) {
           <CardTitle>Proficiency Levels</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {proficiencyLevels.map((level) => (
               <div key={level.value} className="text-center p-3 border rounded-lg">
                 <div className={`w-4 h-4 ${level.color} rounded-full mx-auto mb-2`}></div>
@@ -131,7 +145,7 @@ export function GradingInterface({ task, onClose }: GradingInterfaceProps) {
                     )}
                   </div>
 
-                  <div className="grid grid-cols-4 gap-2 mb-3">
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mb-3">
                     {proficiencyLevels.map((level) => (
                       <button
                         key={level.value}

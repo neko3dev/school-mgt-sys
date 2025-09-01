@@ -8,6 +8,8 @@ import { Progress } from '@/components/ui/progress';
 import { mockSBATasks, mockAssessmentEvidence, mockOutcomeMaps, mockSubjects, mockClassrooms } from '@/data/mock-data';
 import { useAssessment } from '@/store';
 import { TaskForm } from '@/components/forms/TaskForm';
+import { EvidenceForm } from '@/components/forms/EvidenceForm';
+import { GradingInterface } from '@/components/forms/GradingInterface';
 import { formatDate } from '@/lib/utils';
 import { ReportExporter } from '@/components/features/ReportExporter';
 import { 
@@ -656,28 +658,32 @@ export function Assessment() {
       </Dialog>
 
       {/* Grading Dialog */}
-      <Dialog open={showGradingDialog} onOpenChange={setShowGradingDialog}>
-        <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>Grade Task: {taskToGrade?.title}</DialogTitle>
-          </DialogHeader>
-          <GradingInterface task={taskToGrade} onClose={() => setShowGradingDialog(false)} />
-        </DialogContent>
-      </Dialog>
+      {showGradingDialog && taskToGrade && (
+        <Dialog open={showGradingDialog} onOpenChange={setShowGradingDialog}>
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Grade Task: {taskToGrade.title}</DialogTitle>
+            </DialogHeader>
+            <GradingInterface task={taskToGrade} onClose={() => setShowGradingDialog(false)} />
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* Evidence Form Dialog */}
-      <Dialog open={showEvidenceForm} onOpenChange={setShowEvidenceForm}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Add Evidence</DialogTitle>
-          </DialogHeader>
-          <EvidenceForm 
-            task={selectedTask} 
-            onClose={() => setShowEvidenceForm(false)}
-            onSave={handleSaveEvidence}
-          />
-        </DialogContent>
-      </Dialog>
+      {showEvidenceForm && selectedTask && (
+        <Dialog open={showEvidenceForm} onOpenChange={setShowEvidenceForm}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Add Evidence</DialogTitle>
+            </DialogHeader>
+            <EvidenceForm 
+              task={selectedTask} 
+              onClose={() => setShowEvidenceForm(false)}
+              onSave={handleSaveEvidence}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

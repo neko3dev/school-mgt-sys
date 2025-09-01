@@ -101,7 +101,11 @@ export function Finance() {
   const handleSendInvoice = (invoice: any) => {
     const student = mockLearners.find(s => s.id === invoice.learner_id);
     // Simulate sending invoice via SMS/Email
-    alert(`Invoice sent to ${student?.guardians?.[0]?.phone || 'parent'}`);
+    const notification = document.createElement('div');
+    notification.className = 'fixed top-4 right-4 bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+    notification.textContent = `Invoice sent to ${student?.guardians?.[0]?.phone || 'parent'}`;
+    document.body.appendChild(notification);
+    setTimeout(() => document.body.removeChild(notification), 3000);
   };
 
   const handleBulkExport = () => {

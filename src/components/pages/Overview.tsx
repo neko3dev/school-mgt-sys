@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/store';
+import { DatabaseStatus } from '@/components/features/DatabaseStatus';
 import { 
   Users, 
   BookOpen, 
@@ -79,6 +80,9 @@ export function Overview() {
 
   return (
     <div className="space-y-6">
+      {/* Database Status */}
+      <DatabaseStatus />
+      
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Welcome back, {user?.name}</h1>

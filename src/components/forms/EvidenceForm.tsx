@@ -29,7 +29,30 @@ export function EvidenceForm({ task, onClose, onSave }: EvidenceFormProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
+    
+    // Validate required fields
+    if (!formData.learner_id || !formData.comment) {
+      alert('Please fill in all required fields');
+      return;
+    }
+    
+    const evidenceData = {
+      ...formData,
+      id: Date.now().toString(),
+      teacher_id: 'current-user',
+      captured_at: new Date().toISOString(),
+      files: []
+    };
+    
+    onSave(evidenceData);
+    
+    // Show success notification
+    const notification = document.createElement('div');
+    notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+    notification.textContent = 'Evidence saved successfully!';
+    document.body.appendChild(notification);
+    setTimeout(() => document.body.removeChild(notification), 3000);
+    
     onClose();
   };
 

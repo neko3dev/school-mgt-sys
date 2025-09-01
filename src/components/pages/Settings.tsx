@@ -49,13 +49,23 @@ export function Settings() {
   const handleSaveSchoolSettings = () => {
     updateSchoolSettings(schoolForm);
     setHasChanges(false);
-    alert('School settings saved successfully!');
+    // Show success notification
+    const notification = document.createElement('div');
+    notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+    notification.textContent = 'School settings saved successfully!';
+    document.body.appendChild(notification);
+    setTimeout(() => document.body.removeChild(notification), 3000);
   };
 
   const handleSaveSystemSettings = () => {
     updateSystemSettings(systemForm);
     setHasChanges(false);
-    alert('System settings saved successfully!');
+    // Show success notification
+    const notification = document.createElement('div');
+    notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+    notification.textContent = 'System settings saved successfully!';
+    document.body.appendChild(notification);
+    setTimeout(() => document.body.removeChild(notification), 3000);
   };
 
   const handleSchoolFormChange = (field: string, value: any) => {

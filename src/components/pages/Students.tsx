@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { mockLearners, mockClassrooms } from '@/data/mock-data';
 import { useStudents, useReports } from '@/store';
+import { useStudentsData } from '@/hooks/useDatabase';
 import { StudentForm } from '@/components/forms/StudentForm';
 import { formatDate } from '@/lib/utils';
 import { ReportExporter } from '@/components/features/ReportExporter';
@@ -39,10 +40,11 @@ export function Students() {
   const [reportStudent, setReportStudent] = useState<any>(null);
   
   const { students, addStudent, updateStudent, deleteStudent } = useStudents();
+  const { students: dbStudents, createStudent: dbCreateStudent, updateStudent: dbUpdateStudent, deleteStudent: dbDeleteStudent } = useStudentsData();
   const { generateReport } = useReports();
   
   // Use mock data initially, but allow for real CRUD operations
-  const allStudents = students.length > 0 ? students : mockLearners;
+  const allStudents = dbStudents.length > 0 ? dbStudents : students.length > 0 ? students : mockLearners;
 
   const filteredStudents = allStudents.filter(student =>
     student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
