@@ -1,14 +1,53 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { useAuth } from '@/store';
-import { Search, Bell, LogOut, Wifi, WifiOff, FolderSync as Sync, AlertTriangle } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useAuth, useUI, useSearch, useStudents, useStaff, useFinance, useAttendance } from '@/store';
+import { mockLearners, mockTeachers, mockFeeInvoices, mockAttendance } from '@/data/mock-data';
+import { 
+  Search, 
+  Bell, 
+  LogOut, 
+  Wifi, 
+  WifiOff, 
+  RefreshCw as Sync, 
+  AlertTriangle,
+  Moon,
+  Sun,
+  Users,
+  GraduationCap,
+  CreditCard,
+  Calendar,
+  X,
+  Clock,
+  FileText
+} from 'lucide-react';
 
 export function Header() {
   const { logout, user, tenant } = useAuth();
+  const { theme, setTheme, sidebarCollapsed } = useUI();
+  const { 
+    searchTerm, 
+    searchResults, 
+    isSearching, 
+    searchHistory,
+    setSearchTerm, 
+    setSearchResults, 
+    setIsSearching,
+    addToHistory 
+  } = useSearch();
+  
   const [isOnline, setIsOnline] = React.useState(navigator.onLine);
   const [syncStatus, setSyncStatus] = React.useState<'idle' | 'syncing' | 'error'>('idle');
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  const [searchInput, setSearchInput] = useState('');
+
+  // Get data from stores for search
+  const { students } = useStudents();
+  const { staff } = useStaff();
+  const { invoices } = useFinance();
+  const { attendance } = useAttendance();
 
   React.useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -23,6 +62,143 @@ export function Header() {
     };
   }, []);
 
+  // Search functionality
+  useEffect(() => {
+    if (searchInput.trim().length > 2) {
+      performSearch(searchInput);
+    } else {
+      setSearchResults([]);
+      setShowSearchResults(false);
+    }
+  }, [searchInput]);
+
+  const performSearch = async (query: string) => {
+    setIsSearching(true);
+    setShowSearchResults(true);
+    
+    // Simulate search delay
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    const results: any[] = [];
+    const searchLower = query.toLowerCase();
+
+    // Search students (use mock data or store data)
+    const allStudents = students.length > 0 ? students : mockLearners;
+    allStudents.forEach(student => {
+      if (
+        student.name.toLowerCase().includes(searchLower) ||
+        student.admission_no.toLowerCase().includes(searchLower) ||
+        student.upi.toLowerCase().includes(searchLower)
+      ) {
+        results.push({
+          type: 'student',
+          id: student.id,
+          title: student.name,
+          subtitle: `${student.admission_no} • UPI: ${student.upi}`,
+          icon: Users,
+          module: 'students'
+        });
+      }
+    });
+
+    // Search staff
+    const allStaff = staff.length > 0 ? staff : mockTeachers;
+    allStaff.forEach(teacher => {
+      if (
+        teacher.name.toLowerCase().includes(searchLower) ||
+        teacher.tsc_no.toLowerCase().includes(searchLower) ||
+        teacher.email.toLowerCase().includes(searchLower)
+      ) {
+        results.push({
+          type: 'staff',
+          id: teacher.id,
+          title: teacher.name,
+          subtitle: `TSC: ${teacher.tsc_no} • ${teacher.email}`,
+          icon: GraduationCap,
+          module: 'staff'
+        });
+      }
+    });
+
+    // Search invoices
+    const allInvoices = invoices.length > 0 ? invoices : mockFeeInvoices;
+    allInvoices.forEach(invoice => {
+      const student = allStudents.find(s => s.id === invoice.learner_id);
+      if (
+        student?.name.toLowerCase().includes(searchLower) ||
+        invoice.id.toLowerCase().includes(searchLower)
+      ) {
+        results.push({
+          type: 'invoice',
+          id: invoice.id,
+          title: `Invoice - ${student?.name}`,
+          subtitle: `Term ${invoice.term} ${invoice.academic_year} • Balance: KES ${invoice.balance.toLocaleString()}`,
+          icon: CreditCard,
+          module: 'finance'
+        });
+      }
+    });
+
+    // Search attendance records
+    const allAttendance = attendance.length > 0 ? attendance : mockAttendance;
+    allAttendance.forEach(record => {
+      const student = allStudents.find(s => s.id === record.learner_id);
+      if (student?.name.toLowerCase().includes(searchLower)) {
+        results.push({
+          type: 'attendance',
+          id: record.id,
+          title: `Attendance - ${student.name}`,
+          subtitle: `${record.date} • ${record.status}`,
+          icon: Calendar,
+          module: 'attendance'
+        });
+      }
+    });
+
+    // Add module searches
+    const modules = [
+      { name: 'Students', module: 'students', icon: Users },
+      { name: 'Assessment', module: 'assessment', icon: FileText },
+      { name: 'Finance', module: 'finance', icon: CreditCard },
+      { name: 'Attendance', module: 'attendance', icon: Calendar },
+      { name: 'Transport', module: 'transport', icon: Users },
+      { name: 'Staff', module: 'staff', icon: GraduationCap },
+      { name: 'Welfare', module: 'welfare', icon: Users },
+      { name: 'Communications', module: 'communications', icon: Users },
+      { name: 'Library', module: 'library', icon: FileText },
+      { name: 'Inventory', module: 'inventory', icon: Users },
+      { name: 'Events', module: 'events', icon: Calendar },
+      { name: 'Reports', module: 'reports', icon: FileText },
+      { name: 'Analytics', module: 'analytics', icon: Users },
+      { name: 'Settings', module: 'settings', icon: Users }
+    ];
+
+    modules.forEach(mod => {
+      if (mod.name.toLowerCase().includes(searchLower)) {
+        results.push({
+          type: 'module',
+          id: mod.module,
+          title: mod.name,
+          subtitle: `Navigate to ${mod.name} module`,
+          icon: mod.icon,
+          module: mod.module
+        });
+      }
+    });
+
+    setSearchResults(results.slice(0, 10)); // Limit to 10 results
+    setIsSearching(false);
+  };
+
+  const handleSearchSelect = (result: any) => {
+    addToHistory(searchInput);
+    setShowSearchResults(false);
+    setSearchInput('');
+    
+    // Navigate to the appropriate module
+    window.dispatchEvent(new CustomEvent('navigate', { detail: result.module }));
+  };
+
   const handleSync = () => {
     setSyncStatus('syncing');
     // Simulate sync
@@ -31,79 +207,171 @@ export function Header() {
     }, 2000);
   };
 
+  const toggleTheme = () => {
+    const newTheme = theme === 'light' ? 'dark' : 'light';
+    setTheme(newTheme);
+    document.documentElement.classList.toggle('dark', newTheme === 'dark');
+  };
+
+  // Apply theme on mount
+  React.useEffect(() => {
+    document.documentElement.classList.toggle('dark', theme === 'dark');
+  }, [theme]);
+
   return (
-    <header className="bg-white border-b border-gray-200 px-3 lg:px-6 py-3 lg:py-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2 lg:space-x-4 flex-1 min-w-0">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-              placeholder="Search students, tasks, invoices..."
-              className="pl-10 w-32 sm:w-48 lg:w-80"
-            />
-          </div>
-          
-          {/* PWA Status Indicators */}
-          <div className="hidden sm:flex items-center space-x-2">
-            <div className="flex items-center space-x-1">
-              {isOnline ? (
-                <Wifi className="h-4 w-4 text-green-500" />
-              ) : (
-                <WifiOff className="h-4 w-4 text-red-500" />
+    <>
+      <header className="bg-background border-b border-border px-3 lg:px-6 py-3 lg:py-4 dark-transition">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2 lg:space-x-4 flex-1 min-w-0">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Input
+                placeholder="Search students, tasks, invoices..."
+                className="pl-10 w-32 sm:w-48 lg:w-80 dark-transition"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                onFocus={() => searchInput.length > 2 && setShowSearchResults(true)}
+              />
+              
+              {/* Search Results Dropdown */}
+              {showSearchResults && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
+                  {isSearching ? (
+                    <div className="p-4 text-center">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mx-auto"></div>
+                      <p className="text-sm text-muted-foreground mt-2">Searching...</p>
+                    </div>
+                  ) : searchResults.length > 0 ? (
+                    <div className="py-2">
+                      {searchResults.map((result, index) => {
+                        const Icon = result.icon;
+                        return (
+                          <button
+                            key={index}
+                            onClick={() => handleSearchSelect(result)}
+                            className="w-full px-4 py-3 text-left hover:bg-accent hover:text-accent-foreground flex items-center space-x-3 dark-transition"
+                          >
+                            <Icon className="h-4 w-4 text-muted-foreground" />
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-foreground truncate">{result.title}</p>
+                              <p className="text-sm text-muted-foreground truncate">{result.subtitle}</p>
+                            </div>
+                            <Badge variant="outline" className="text-xs">
+                              {result.type}
+                            </Badge>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="p-4 text-center">
+                      <p className="text-sm text-muted-foreground">No results found</p>
+                      {searchHistory.length > 0 && (
+                        <div className="mt-3">
+                          <p className="text-xs text-muted-foreground mb-2">Recent searches:</p>
+                          <div className="flex flex-wrap gap-1">
+                            {searchHistory.slice(0, 5).map((term, index) => (
+                              <button
+                                key={index}
+                                onClick={() => setSearchInput(term)}
+                                className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded hover:bg-accent"
+                              >
+                                {term}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               )}
-              <Badge variant={isOnline ? "secondary" : "destructive"}>
-                {isOnline ? "Online" : "Offline"}
-              </Badge>
+            </div>
+            
+            {/* PWA Status Indicators */}
+            <div className="hidden sm:flex items-center space-x-2">
+              <div className="flex items-center space-x-1">
+                {isOnline ? (
+                  <Wifi className="h-4 w-4 text-green-500" />
+                ) : (
+                  <WifiOff className="h-4 w-4 text-red-500" />
+                )}
+                <Badge variant={isOnline ? "secondary" : "destructive"}>
+                  {isOnline ? "Online" : "Offline"}
+                </Badge>
+              </div>
+
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleSync}
+                disabled={syncStatus === 'syncing'}
+                className="text-muted-foreground"
+              >
+                <Sync className={`h-4 w-4 ${syncStatus === 'syncing' ? 'animate-spin' : ''}`} />
+                {syncStatus === 'syncing' && <span className="ml-2 hidden lg:inline">Syncing...</span>}
+              </Button>
+
+              {syncStatus === 'error' && (
+                <Badge variant="destructive" className="flex items-center space-x-1">
+                  <AlertTriangle className="h-3 w-3" />
+                  <span className="hidden lg:inline">Sync Error</span>
+                </Badge>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-2 lg:space-x-4">
+            <div className="text-right hidden sm:block">
+              <p className="text-sm font-medium text-foreground">
+                Term {tenant?.settings.current_term || 1}, {tenant?.settings.academic_year || '2024'}
+              </p>
+              <p className="text-xs text-muted-foreground truncate max-w-32 lg:max-w-none">
+                {tenant?.name || 'School Name'}
+              </p>
             </div>
 
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleSync}
-              disabled={syncStatus === 'syncing'}
-              className="text-gray-500"
+            {/* Theme Toggle */}
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={toggleTheme}
+              className="text-muted-foreground hover:text-foreground"
             >
-              <Sync className={`h-4 w-4 ${syncStatus === 'syncing' ? 'animate-spin' : ''}`} />
-              {syncStatus === 'syncing' && <span className="ml-2 hidden lg:inline">Syncing...</span>}
+              {theme === 'light' ? (
+                <Moon className="h-5 w-5" />
+              ) : (
+                <Sun className="h-5 w-5" />
+              )}
             </Button>
 
-            {syncStatus === 'error' && (
-              <Badge variant="destructive" className="flex items-center space-x-1">
-                <AlertTriangle className="h-3 w-3" />
-                <span className="hidden lg:inline">Sync Error</span>
+            <Button variant="ghost" size="icon" className="relative">
+              <Bell className="h-5 w-5" />
+              <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs">
+                3
               </Badge>
-            )}
+            </Button>
+
+            <Button variant="ghost" onClick={logout} className="text-muted-foreground hover:text-foreground hidden sm:flex">
+              <LogOut className="h-4 w-4 mr-2" />
+              <span className="hidden lg:inline">Sign Out</span>
+            </Button>
+            
+            {/* Mobile Sign Out */}
+            <Button variant="ghost" size="icon" onClick={logout} className="sm:hidden">
+              <LogOut className="h-4 w-4" />
+            </Button>
           </div>
         </div>
+      </header>
 
-        <div className="flex items-center space-x-2 lg:space-x-4">
-          <div className="text-right hidden sm:block">
-            <p className="text-sm font-medium text-gray-900">
-              Term {tenant?.settings.current_term || 1}, {tenant?.settings.academic_year || '2024'}
-            </p>
-            <p className="text-xs text-gray-500 truncate max-w-32 lg:max-w-none">
-              {tenant?.name || 'School Name'}
-            </p>
-          </div>
-
-          <Button variant="ghost" size="icon" className="relative">
-            <Bell className="h-5 w-5" />
-            <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs">
-              3
-            </Badge>
-          </Button>
-
-          <Button variant="ghost" onClick={logout} className="text-gray-500 hover:text-gray-900 hidden sm:flex">
-            <LogOut className="h-4 w-4 mr-2" />
-            <span className="hidden lg:inline">Sign Out</span>
-          </Button>
-          
-          {/* Mobile Sign Out */}
-          <Button variant="ghost" size="icon" onClick={logout} className="sm:hidden">
-            <LogOut className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-    </header>
+      {/* Search Results Overlay */}
+      {showSearchResults && (
+        <div 
+          className="fixed inset-0 bg-black/20 z-40"
+          onClick={() => setShowSearchResults(false)}
+        />
+      )}
+    </>
   );
 }

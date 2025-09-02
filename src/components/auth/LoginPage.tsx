@@ -27,7 +27,7 @@ export function LoginPage() {
   ];
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-green-50">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-background to-green-50 dark:from-gray-900 dark:via-background dark:to-gray-800 dark-transition">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
           <div className="flex justify-center mb-4">
@@ -35,14 +35,14 @@ export function LoginPage() {
               <GraduationCap className="h-8 w-8 text-white" />
             </div>
           </div>
-          <h2 className="text-3xl font-bold text-gray-900">CBC School Manager</h2>
-          <p className="mt-2 text-gray-600">Kenyan Competency-Based Curriculum Platform</p>
+          <h2 className="text-3xl font-bold text-foreground">CBC School Manager</h2>
+          <p className="mt-2 text-muted-foreground">Kenyan Competency-Based Curriculum Platform</p>
           <Badge variant="secondary" className="mt-2">
             Production Ready • ODPC Compliant
           </Badge>
         </div>
 
-        <Card>
+        <Card className="dark-transition">
           <CardHeader>
             <CardTitle>Sign In</CardTitle>
           </CardHeader>

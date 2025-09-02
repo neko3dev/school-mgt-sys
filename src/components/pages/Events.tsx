@@ -8,8 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { formatDate, generateId } from '@/lib/utils';
+import { formatDate, formatCurrency, generateId } from '@/lib/utils';
 import { useEvents, useReports } from '@/store';
 import { 
   CalendarDays, 
@@ -32,7 +31,8 @@ import {
   Award,
   Music,
   Trophy,
-  Palette
+  Palette,
+  DollarSign
 } from 'lucide-react';
 
 export function Events() {
@@ -179,59 +179,59 @@ export function Events() {
     const Icon = config.icon;
 
     return (
-      <Card className="hover:shadow-md transition-shadow">
-        <CardContent className="p-6">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <div className="flex items-center space-x-2 mb-2">
-                <div className={`p-1 rounded-full ${config.bg}`}>
+      <Card className="hover:shadow-md transition-all duration-200 dark-transition">
+        <CardContent className="p-4 lg:p-6">
+          <div className="flex flex-col lg:flex-row items-start justify-between space-y-4 lg:space-y-0">
+            <div className="flex-1 w-full lg:w-auto">
+              <div className="flex flex-wrap items-center gap-2 mb-2">
+                <div className={`p-1 rounded-full ${config.bg} dark:bg-opacity-20`}>
                   <Icon className={`h-4 w-4 ${config.color}`} />
                 </div>
-                <h3 className="font-semibold text-gray-900">{event.title}</h3>
+                <h3 className="font-semibold text-foreground">{event.title}</h3>
                 <Badge variant="outline" className="capitalize">{event.type}</Badge>
                 <Badge variant={event.status === 'confirmed' ? 'default' : 'secondary'}>
                   {event.status}
                 </Badge>
               </div>
               
-              <p className="text-sm text-gray-600 mb-3">{event.description}</p>
+              <p className="text-sm text-muted-foreground mb-3">{event.description}</p>
               
-              <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 lg:gap-4 text-sm">
                 <div className="flex items-center space-x-2">
-                  <Calendar className="h-4 w-4 text-gray-400" />
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
                   <span>{formatDate(event.date)}</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Clock className="h-4 w-4 text-gray-400" />
+                  <Clock className="h-4 w-4 text-muted-foreground" />
                   <span>{event.start_time} - {event.end_time}</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <MapPin className="h-4 w-4 text-gray-400" />
+                  <MapPin className="h-4 w-4 text-muted-foreground" />
                   <span>{event.location}</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Users className="h-4 w-4 text-gray-400" />
+                  <Users className="h-4 w-4 text-muted-foreground" />
                   <span>{event.attendees_expected} expected</span>
                 </div>
               </div>
             </div>
 
-            <div className="flex flex-col space-y-2">
-              <Button variant="outline" size="sm" onClick={() => handleViewEvent(event)}>
+            <div className="flex flex-row lg:flex-col gap-2 w-full lg:w-auto">
+              <Button variant="outline" size="sm" onClick={() => handleViewEvent(event)} className="flex-1 lg:flex-none">
                 <Eye className="h-4 w-4 mr-1" />
-                View
+                <span className="lg:hidden">View</span>
               </Button>
-              <Button variant="outline" size="sm" onClick={() => handleEditEvent(event)}>
+              <Button variant="outline" size="sm" onClick={() => handleEditEvent(event)} className="flex-1 lg:flex-none">
                 <Edit className="h-4 w-4 mr-1" />
-                Edit
+                <span className="lg:hidden">Edit</span>
               </Button>
-              <Button variant="outline" size="sm" onClick={() => handleExportEvent(event)}>
+              <Button variant="outline" size="sm" onClick={() => handleExportEvent(event)} className="flex-1 lg:flex-none">
                 <Download className="h-4 w-4 mr-1" />
-                Export
+                <span className="lg:hidden">Export</span>
               </Button>
-              <Button variant="outline" size="sm" onClick={() => handleDeleteEvent(event)}>
+              <Button variant="outline" size="sm" onClick={() => handleDeleteEvent(event)} className="flex-1 lg:flex-none">
                 <Trash2 className="h-4 w-4 mr-1" />
-                Delete
+                <span className="lg:hidden">Delete</span>
               </Button>
             </div>
           </div>
@@ -245,12 +245,11 @@ export function Events() {
       title: selectedEvent?.title || '',
       description: selectedEvent?.description || '',
       type: selectedEvent?.type || 'academic',
-      date: selectedEvent?.date || '',
+      date: selectedEvent?.date?.split('T')[0] || '',
       start_time: selectedEvent?.start_time || '09:00',
       end_time: selectedEvent?.end_time || '15:00',
       location: selectedEvent?.location || '',
       organizer: selectedEvent?.organizer || '',
-      participants: selectedEvent?.participants || [],
       budget: selectedEvent?.budget || 0,
       attendees_expected: selectedEvent?.attendees_expected || 0,
       status: selectedEvent?.status || 'planned'
@@ -263,7 +262,7 @@ export function Events() {
 
     return (
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div>
             <Label htmlFor="title">Event Title *</Label>
             <Input
@@ -300,7 +299,7 @@ export function Events() {
           />
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <div>
             <Label htmlFor="date">Date *</Label>
             <Input
@@ -333,7 +332,7 @@ export function Events() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div>
             <Label htmlFor="location">Location *</Label>
             <Input
@@ -353,14 +352,14 @@ export function Events() {
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <div>
             <Label htmlFor="budget">Budget (KES)</Label>
             <Input
               id="budget"
               type="number"
               value={formData.budget}
-              onChange={(e) => setFormData(prev => ({ ...prev, budget: parseInt(e.target.value) }))}
+              onChange={(e) => setFormData(prev => ({ ...prev, budget: parseInt(e.target.value) || 0 }))}
             />
           </div>
           <div>
@@ -369,7 +368,7 @@ export function Events() {
               id="attendees_expected"
               type="number"
               value={formData.attendees_expected}
-              onChange={(e) => setFormData(prev => ({ ...prev, attendees_expected: parseInt(e.target.value) }))}
+              onChange={(e) => setFormData(prev => ({ ...prev, attendees_expected: parseInt(e.target.value) || 0 }))}
             />
           </div>
           <div>
@@ -388,12 +387,12 @@ export function Events() {
           </div>
         </div>
 
-        <div className="flex space-x-2">
-          <Button type="submit">
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Button type="submit" className="flex-1">
             <Save className="h-4 w-4 mr-2" />
             {selectedEvent ? 'Update Event' : 'Create Event'}
           </Button>
-          <Button type="button" variant="outline" onClick={() => setShowEventForm(false)}>
+          <Button type="button" variant="outline" onClick={() => setShowEventForm(false)} className="flex-1 sm:flex-none">
             Cancel
           </Button>
         </div>
@@ -401,15 +400,80 @@ export function Events() {
     );
   };
 
+  const EventDetailsView = ({ event }: { event: any }) => {
+    if (!event) return null;
+
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="space-y-4">
+            <div>
+              <Label>Event Title</Label>
+              <p className="font-medium">{event.title}</p>
+            </div>
+            <div>
+              <Label>Type</Label>
+              <Badge variant="outline" className="capitalize">{event.type}</Badge>
+            </div>
+            <div>
+              <Label>Date & Time</Label>
+              <p className="font-medium">{formatDate(event.date)} • {event.start_time} - {event.end_time}</p>
+            </div>
+            <div>
+              <Label>Location</Label>
+              <p className="font-medium">{event.location}</p>
+            </div>
+          </div>
+          <div className="space-y-4">
+            <div>
+              <Label>Organizer</Label>
+              <p className="font-medium">{event.organizer}</p>
+            </div>
+            <div>
+              <Label>Status</Label>
+              <Badge variant={event.status === 'confirmed' ? 'default' : 'secondary'}>
+                {event.status}
+              </Badge>
+            </div>
+            <div>
+              <Label>Expected Attendees</Label>
+              <p className="font-medium">{event.attendees_expected}</p>
+            </div>
+            <div>
+              <Label>Budget</Label>
+              <p className="font-medium">{formatCurrency(event.budget || 0)}</p>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <Label>Description</Label>
+          <p className="text-muted-foreground">{event.description}</p>
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Button className="flex-1" onClick={() => handleEditEvent(event)}>
+            <Edit className="h-4 w-4 mr-2" />
+            Edit Event
+          </Button>
+          <Button variant="outline" className="flex-1" onClick={() => handleExportEvent(event)}>
+            <Download className="h-4 w-4 mr-2" />
+            Export Details
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Events Management</h1>
-          <p className="text-gray-600 mt-1">Organize and manage school events and activities</p>
+          <h1 className="text-3xl font-bold text-foreground">Events Management</h1>
+          <p className="text-muted-foreground mt-1">Organize and manage school events and activities</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <Badge variant="secondary" className="bg-blue-50 text-blue-700">
+          <Badge variant="secondary" className="bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300">
             {upcomingEvents.length} Upcoming
           </Badge>
           <Button onClick={handleAddEvent}>
@@ -425,11 +489,11 @@ export function Events() {
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
+        <Card className="dark-transition">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Upcoming Events</p>
+                <p className="text-sm text-muted-foreground">Upcoming Events</p>
                 <p className="text-2xl font-bold text-blue-600">{upcomingEvents.length}</p>
               </div>
               <CalendarDays className="h-8 w-8 text-blue-500" />
@@ -437,11 +501,11 @@ export function Events() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="dark-transition">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">This Month</p>
+                <p className="text-sm text-muted-foreground">This Month</p>
                 <p className="text-2xl font-bold text-green-600">
                   {allEvents.filter(e => new Date(e.date).getMonth() === new Date().getMonth()).length}
                 </p>
@@ -451,25 +515,25 @@ export function Events() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="dark-transition">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Total Budget</p>
+                <p className="text-sm text-muted-foreground">Total Budget</p>
                 <p className="text-2xl font-bold text-purple-600">
-                  KES {allEvents.reduce((sum, e) => sum + (e.budget || 0), 0).toLocaleString()}
+                  {formatCurrency(allEvents.reduce((sum, e) => sum + (e.budget || 0), 0))}
                 </p>
               </div>
-              <Trophy className="h-8 w-8 text-purple-500" />
+              <DollarSign className="h-8 w-8 text-purple-500" />
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="dark-transition">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Expected Attendees</p>
+                <p className="text-sm text-muted-foreground">Expected Attendees</p>
                 <p className="text-2xl font-bold text-orange-600">
                   {allEvents.reduce((sum, e) => sum + (e.attendees_expected || 0), 0)}
                 </p>
@@ -490,7 +554,7 @@ export function Events() {
         <TabsContent value="upcoming" className="space-y-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
             <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
                 placeholder="Search events..."
                 value={searchTerm}
@@ -504,9 +568,11 @@ export function Events() {
             </Button>
           </div>
 
-          {upcomingEvents.map((event) => (
-            <EventCard key={event.id} event={event} />
-          ))}
+          <div className="space-y-4">
+            {upcomingEvents.map((event) => (
+              <EventCard key={event.id} event={event} />
+            ))}
+          </div>
         </TabsContent>
 
         <TabsContent value="past" className="space-y-4">
@@ -516,13 +582,13 @@ export function Events() {
         </TabsContent>
 
         <TabsContent value="calendar" className="space-y-6">
-          <Card>
+          <Card className="dark-transition">
             <CardHeader>
               <CardTitle>Events Calendar</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="bg-gray-50 rounded-lg h-96 flex items-center justify-center">
-                <div className="text-center text-gray-500">
+              <div className="bg-muted rounded-lg h-96 flex items-center justify-center">
+                <div className="text-center text-muted-foreground">
                   <CalendarDays className="h-12 w-12 mx-auto mb-4" />
                   <p>Interactive calendar would be displayed here</p>
                   <p className="text-sm">Showing all school events and activities</p>
@@ -561,12 +627,12 @@ export function Events() {
           </DialogHeader>
           <div className="space-y-4">
             <p>Are you sure you want to delete <strong>{eventToDelete?.title}</strong>?</p>
-            <p className="text-sm text-gray-600">This action cannot be undone.</p>
-            <div className="flex space-x-2">
-              <Button variant="destructive" onClick={confirmDelete}>
+            <p className="text-sm text-muted-foreground">This action cannot be undone.</p>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Button variant="destructive" onClick={confirmDelete} className="flex-1">
                 Delete Event
               </Button>
-              <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
+              <Button variant="outline" onClick={() => setShowDeleteDialog(false)} className="flex-1">
                 Cancel
               </Button>
             </div>
@@ -576,68 +642,3 @@ export function Events() {
     </div>
   );
 }
-
-const EventDetailsView = ({ event }: { event: any }) => {
-  if (!event) return null;
-
-  return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-2 gap-6">
-        <div className="space-y-4">
-          <div>
-            <Label>Event Title</Label>
-            <p className="font-medium">{event.title}</p>
-          </div>
-          <div>
-            <Label>Type</Label>
-            <Badge variant="outline" className="capitalize">{event.type}</Badge>
-          </div>
-          <div>
-            <Label>Date & Time</Label>
-            <p className="font-medium">{formatDate(event.date)} • {event.start_time} - {event.end_time}</p>
-          </div>
-          <div>
-            <Label>Location</Label>
-            <p className="font-medium">{event.location}</p>
-          </div>
-        </div>
-        <div className="space-y-4">
-          <div>
-            <Label>Organizer</Label>
-            <p className="font-medium">{event.organizer}</p>
-          </div>
-          <div>
-            <Label>Status</Label>
-            <Badge variant={event.status === 'confirmed' ? 'default' : 'secondary'}>
-              {event.status}
-            </Badge>
-          </div>
-          <div>
-            <Label>Expected Attendees</Label>
-            <p className="font-medium">{event.attendees_expected}</p>
-          </div>
-          <div>
-            <Label>Budget</Label>
-            <p className="font-medium">KES {event.budget?.toLocaleString()}</p>
-          </div>
-        </div>
-      </div>
-
-      <div>
-        <Label>Description</Label>
-        <p className="text-gray-700">{event.description}</p>
-      </div>
-
-      <div className="flex space-x-2">
-        <Button className="flex-1">
-          <Edit className="h-4 w-4 mr-2" />
-          Edit Event
-        </Button>
-        <Button variant="outline" className="flex-1">
-          <Download className="h-4 w-4 mr-2" />
-          Export Details
-        </Button>
-      </div>
-    </div>
-  );
-};

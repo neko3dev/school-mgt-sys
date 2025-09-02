@@ -393,6 +393,37 @@ export const useSettings = create<SettingsState>((set) => ({
     userSettings: { ...state.userSettings, ...settings }
   })),
 }))
+
+// Search Store
+interface SearchState {
+  searchTerm: string
+  searchResults: any[]
+  isSearching: boolean
+  searchHistory: string[]
+  setSearchTerm: (term: string) => void
+  setSearchResults: (results: any[]) => void
+  setIsSearching: (searching: boolean) => void
+  addToHistory: (term: string) => void
+  clearHistory: () => void
+}
+
+export const useSearch = create<SearchState>((set, get) => ({
+  searchTerm: '',
+  searchResults: [],
+  isSearching: false,
+  searchHistory: [],
+  setSearchTerm: (term) => set({ searchTerm: term }),
+  setSearchResults: (results) => set({ searchResults: results }),
+  setIsSearching: (searching) => set({ isSearching: searching }),
+  addToHistory: (term) => {
+    if (term.trim() && !get().searchHistory.includes(term)) {
+      set((state) => ({
+        searchHistory: [term, ...state.searchHistory.slice(0, 9)] // Keep last 10 searches
+      }));
+    }
+  },
+  clearHistory: () => set({ searchHistory: [] }),
+}))
 // Staff Store
 interface StaffState {
   staff: any[]

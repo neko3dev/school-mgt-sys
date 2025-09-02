@@ -85,8 +85,8 @@ export function Overview() {
       
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Welcome back, {user?.name}</h1>
-          <p className="text-gray-600 mt-1">Here's what's happening at {tenant?.name || 'your school'} today</p>
+          <h1 className="text-3xl font-bold text-foreground">Welcome back, {user?.name}</h1>
+          <p className="text-muted-foreground mt-1">Here's what's happening at {tenant?.name || 'your school'} today</p>
         </div>
         <div className="flex items-center space-x-2">
           <Badge variant="secondary" className="bg-green-50 text-green-700">

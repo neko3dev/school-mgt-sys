@@ -48,7 +48,7 @@ export function Dashboard() {
   const CurrentPageComponent = pages[currentPage as keyof typeof pages];
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
+    <div className="flex h-screen bg-background overflow-hidden dark-transition">
       <Sidebar currentPage={currentPage} onNavigate={setCurrentPage} />
       <div className={cn(
         "flex-1 flex flex-col transition-all duration-300",
