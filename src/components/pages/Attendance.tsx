@@ -605,7 +605,7 @@ export function Attendance() {
                   <AlertTriangle className="h-8 w-8 text-red-600 mx-auto mb-2" />
                   <p className="font-semibold text-red-800">Chronic Absenteeism</p>
                   <p className="text-2xl font-bold text-red-600">3</p>
-                  <p className="text-sm text-red-600">Students >20% absent</p>
+                  <p className="text-sm text-red-600">Students {'>'}20% absent</p>
                 </div>
                 <div className="text-center p-4 bg-yellow-50 rounded-lg">
                   <Clock className="h-8 w-8 text-yellow-600 mx-auto mb-2" />

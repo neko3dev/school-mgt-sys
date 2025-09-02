@@ -38,64 +38,6 @@ import {
   Target
 } from 'lucide-react';
 
-const PerformanceReview = ({ teacher, onClose }: { teacher: any; onClose: () => void }) => {
-  const [reviewData, setReviewData] = useState({
-    teaching_effectiveness: 85,
-    student_engagement: 78,
-    curriculum_delivery: 92,
-    professional_development: 88,
-    collaboration: 90,
-    comments: '',
-    goals: ''
-  });
-
-  const { generateReport } = useReports();
-
-  const handleExportReview = () => {
-    generateReport({
-      type: 'performance_review',
-      title: `${teacher.name} - Performance Review`,
-      data: { teacher, review: reviewData },
-      format: 'pdf'
-    });
-  };
-
-  return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Performance Review - {teacher.name}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div>
-              <Label>Overall Score</Label>
-              <div className="text-2xl font-bold text-blue-600">87%</div>
-            </div>
-            <div>
-              <Label>Comments</Label>
-              <Textarea
-                value={reviewData.comments}
-                onChange={(e) => setReviewData(prev => ({ ...prev, comments: e.target.value }))}
-                placeholder="Performance comments..."
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-      <div className="flex space-x-2">
-        <Button onClick={handleExportReview}>
-          <Download className="h-4 w-4 mr-2" />
-          Export Review
-        </Button>
-        <Button variant="outline" onClick={onClose}>
-          Close
-        </Button>
-      </div>
-    </div>
-  );
-};
-
 export function Staff() {
   const [activeTab, setActiveTab] = useState('staff');
   const [searchTerm, setSearchTerm] = useState('');
