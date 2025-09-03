@@ -3,8 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { useAuth, useUI, useSearch, useStudents, useStaff, useFinance, useAttendance } from '@/store';
-import { mockLearners, mockTeachers, mockFeeInvoices, mockAttendance } from '@/data/mock-data';
+import { useAuth, useUI, useSearch } from '@/store';
 import { 
   Search, 
   Bell, 
@@ -21,7 +20,8 @@ import {
   Calendar,
   X,
   Clock,
-  FileText
+  FileText,
+  BookOpen
 } from 'lucide-react';
 
 export function Header() {
@@ -35,19 +35,14 @@ export function Header() {
     setSearchTerm, 
     setSearchResults, 
     setIsSearching,
-    addToHistory 
+    addToHistory,
+    performGlobalSearch
   } = useSearch();
   
   const [isOnline, setIsOnline] = React.useState(navigator.onLine);
   const [syncStatus, setSyncStatus] = React.useState<'idle' | 'syncing' | 'error'>('idle');
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [searchInput, setSearchInput] = useState('');
-
-  // Get data from stores for search
-  const { students } = useStudents();
-  const { staff } = useStaff();
-  const { invoices } = useFinance();
-  const { attendance } = useAttendance();
 
   React.useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -62,141 +57,56 @@ export function Header() {
     };
   }, []);
 
-  // Search functionality
+  // Enhanced search functionality
   useEffect(() => {
-    if (searchInput.trim().length > 2) {
-      performSearch(searchInput);
-    } else {
-      setSearchResults([]);
-      setShowSearchResults(false);
-    }
-  }, [searchInput]);
-
-  const performSearch = async (query: string) => {
-    setIsSearching(true);
-    setShowSearchResults(true);
-    
-    // Simulate search delay
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    const results: any[] = [];
-    const searchLower = query.toLowerCase();
-
-    // Search students (use mock data or store data)
-    const allStudents = students.length > 0 ? students : mockLearners;
-    allStudents.forEach(student => {
-      if (
-        student.name.toLowerCase().includes(searchLower) ||
-        student.admission_no.toLowerCase().includes(searchLower) ||
-        student.upi.toLowerCase().includes(searchLower)
-      ) {
-        results.push({
-          type: 'student',
-          id: student.id,
-          title: student.name,
-          subtitle: `${student.admission_no} • UPI: ${student.upi}`,
-          icon: Users,
-          module: 'students'
-        });
+    const searchTimeout = setTimeout(async () => {
+      if (searchInput.trim().length > 2) {
+        setIsSearching(true);
+        setShowSearchResults(true);
+        
+        try {
+          const results = await performGlobalSearch(searchInput);
+          setSearchResults(results);
+        } catch (error) {
+          console.error('Search error:', error);
+          setSearchResults([]);
+        } finally {
+          setIsSearching(false);
+        }
+      } else {
+        setSearchResults([]);
+        setShowSearchResults(false);
       }
-    });
+    }, 300);
 
-    // Search staff
-    const allStaff = staff.length > 0 ? staff : mockTeachers;
-    allStaff.forEach(teacher => {
-      if (
-        teacher.name.toLowerCase().includes(searchLower) ||
-        teacher.tsc_no.toLowerCase().includes(searchLower) ||
-        teacher.email.toLowerCase().includes(searchLower)
-      ) {
-        results.push({
-          type: 'staff',
-          id: teacher.id,
-          title: teacher.name,
-          subtitle: `TSC: ${teacher.tsc_no} • ${teacher.email}`,
-          icon: GraduationCap,
-          module: 'staff'
-        });
-      }
-    });
-
-    // Search invoices
-    const allInvoices = invoices.length > 0 ? invoices : mockFeeInvoices;
-    allInvoices.forEach(invoice => {
-      const student = allStudents.find(s => s.id === invoice.learner_id);
-      if (
-        student?.name.toLowerCase().includes(searchLower) ||
-        invoice.id.toLowerCase().includes(searchLower)
-      ) {
-        results.push({
-          type: 'invoice',
-          id: invoice.id,
-          title: `Invoice - ${student?.name}`,
-          subtitle: `Term ${invoice.term} ${invoice.academic_year} • Balance: KES ${invoice.balance.toLocaleString()}`,
-          icon: CreditCard,
-          module: 'finance'
-        });
-      }
-    });
-
-    // Search attendance records
-    const allAttendance = attendance.length > 0 ? attendance : mockAttendance;
-    allAttendance.forEach(record => {
-      const student = allStudents.find(s => s.id === record.learner_id);
-      if (student?.name.toLowerCase().includes(searchLower)) {
-        results.push({
-          type: 'attendance',
-          id: record.id,
-          title: `Attendance - ${student.name}`,
-          subtitle: `${record.date} • ${record.status}`,
-          icon: Calendar,
-          module: 'attendance'
-        });
-      }
-    });
-
-    // Add module searches
-    const modules = [
-      { name: 'Students', module: 'students', icon: Users },
-      { name: 'Assessment', module: 'assessment', icon: FileText },
-      { name: 'Finance', module: 'finance', icon: CreditCard },
-      { name: 'Attendance', module: 'attendance', icon: Calendar },
-      { name: 'Transport', module: 'transport', icon: Users },
-      { name: 'Staff', module: 'staff', icon: GraduationCap },
-      { name: 'Welfare', module: 'welfare', icon: Users },
-      { name: 'Communications', module: 'communications', icon: Users },
-      { name: 'Library', module: 'library', icon: FileText },
-      { name: 'Inventory', module: 'inventory', icon: Users },
-      { name: 'Events', module: 'events', icon: Calendar },
-      { name: 'Reports', module: 'reports', icon: FileText },
-      { name: 'Analytics', module: 'analytics', icon: Users },
-      { name: 'Settings', module: 'settings', icon: Users }
-    ];
-
-    modules.forEach(mod => {
-      if (mod.name.toLowerCase().includes(searchLower)) {
-        results.push({
-          type: 'module',
-          id: mod.module,
-          title: mod.name,
-          subtitle: `Navigate to ${mod.name} module`,
-          icon: mod.icon,
-          module: mod.module
-        });
-      }
-    });
-
-    setSearchResults(results.slice(0, 10)); // Limit to 10 results
-    setIsSearching(false);
-  };
+    return () => clearTimeout(searchTimeout);
+  }, [searchInput, performGlobalSearch, setSearchResults, setIsSearching]);
 
   const handleSearchSelect = (result: any) => {
     addToHistory(searchInput);
     setShowSearchResults(false);
     setSearchInput('');
     
-    // Navigate to the appropriate module
+    // Navigate to the appropriate module and set selected item
     window.dispatchEvent(new CustomEvent('navigate', { detail: result.module }));
+    
+    // Set the selected item in the appropriate store
+    setTimeout(() => {
+      switch (result.type) {
+        case 'student':
+          window.dispatchEvent(new CustomEvent('selectStudent', { detail: result.data }));
+          break;
+        case 'staff':
+          window.dispatchEvent(new CustomEvent('selectStaff', { detail: result.data }));
+          break;
+        case 'invoice':
+          window.dispatchEvent(new CustomEvent('selectInvoice', { detail: result.data }));
+          break;
+        case 'task':
+          window.dispatchEvent(new CustomEvent('selectTask', { detail: result.data }));
+          break;
+      }
+    }, 100);
   };
 
   const handleSync = () => {
@@ -217,6 +127,18 @@ export function Header() {
   React.useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark');
   }, [theme]);
+
+  const getSearchIcon = (type: string) => {
+    switch (type) {
+      case 'student': return Users;
+      case 'staff': return GraduationCap;
+      case 'invoice': return CreditCard;
+      case 'task': return BookOpen;
+      case 'attendance': return Calendar;
+      case 'module': return FileText;
+      default: return FileText;
+    }
+  };
 
   return (
     <>
@@ -244,7 +166,7 @@ export function Header() {
                   ) : searchResults.length > 0 ? (
                     <div className="py-2">
                       {searchResults.map((result, index) => {
-                        const Icon = result.icon;
+                        const Icon = getSearchIcon(result.type);
                         return (
                           <button
                             key={index}

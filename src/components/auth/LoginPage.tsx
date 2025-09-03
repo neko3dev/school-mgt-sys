@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/store';
-import { mockUsers, mockTenant } from '@/data/mock-data';
+import { realisticUsers, realisticTenant } from '@/data/realistic-data';
 import { GraduationCap, Shield, Users, BookOpen } from 'lucide-react';
 
 export function LoginPage() {
@@ -14,16 +14,16 @@ export function LoginPage() {
   const { login } = useAuth();
 
   const handleLogin = (userEmail: string) => {
-    const user = mockUsers.find(u => u.email === userEmail);
+    const user = realisticUsers.find(u => u.email === userEmail);
     if (user) {
-      login(user, mockTenant);
+      login(user, realisticTenant);
     }
   };
 
   const demoUsers = [
-    { ...mockUsers[0], icon: Shield, color: 'bg-red-500' },
-    { ...mockUsers[1], icon: BookOpen, color: 'bg-blue-500' },
-    { ...mockUsers[2], icon: Users, color: 'bg-green-500' }
+    { ...realisticUsers[0], icon: Shield, color: 'bg-red-500' },
+    { ...realisticUsers[1], icon: BookOpen, color: 'bg-blue-500' },
+    { ...realisticUsers[3], icon: Users, color: 'bg-green-500' }
   ];
 
   return (

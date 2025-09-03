@@ -106,15 +106,16 @@ export function Sidebar({ currentPage, onNavigate }: SidebarProps) {
 
       {/* Sidebar */}
       <div className={cn(
-        "fixed left-0 top-0 h-full bg-background border-r border-border transition-all duration-300 z-50 dark-transition",
+        "fixed left-0 top-0 h-full bg-background border-r border-border transition-all duration-300 z-50 dark-transition flex flex-col",
         "lg:z-30",
         // Desktop behavior
-        "hidden lg:block",
+        "hidden lg:flex",
         sidebarCollapsed ? "lg:w-16" : "lg:w-64",
         // Mobile behavior
-        mobileMenuOpen ? "block w-64 shadow-xl" : "hidden lg:block"
+        mobileMenuOpen ? "flex w-64 shadow-xl" : "hidden lg:flex"
       )}>
-        <div className="flex items-center justify-between p-4 border-b border-border">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b border-border flex-shrink-0">
           {(!sidebarCollapsed || mobileMenuOpen) && (
             <div className="flex items-center space-x-2">
               <div className="p-2 bg-primary rounded-lg">
@@ -143,7 +144,8 @@ export function Sidebar({ currentPage, onNavigate }: SidebarProps) {
           </Button>
         </div>
 
-        <nav className="p-2 lg:p-4 space-y-1 lg:space-y-2 overflow-y-auto h-[calc(100vh-200px)] scrollbar-hide">
+        {/* Navigation - Scrollable */}
+        <nav className="flex-1 p-2 lg:p-4 space-y-1 lg:space-y-2 overflow-y-auto scrollbar-hide">
           {roleVisibleItems.map((item) => {
             const Icon = item.icon;
             const isActive = currentPage === item.id;
@@ -180,8 +182,9 @@ export function Sidebar({ currentPage, onNavigate }: SidebarProps) {
           })}
         </nav>
 
+        {/* User Profile - Fixed at bottom */}
         {(!sidebarCollapsed || mobileMenuOpen) && (
-          <div className="absolute bottom-4 left-2 lg:left-4 right-2 lg:right-4">
+          <div className="p-2 lg:p-4 border-t border-border flex-shrink-0">
             <div className="bg-gradient-to-r from-primary/10 to-accent/10 p-3 lg:p-4 rounded-lg border border-border">
               <div className="flex items-center space-x-2 lg:space-x-3">
                 <div className="w-8 h-8 lg:w-10 lg:h-10 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
