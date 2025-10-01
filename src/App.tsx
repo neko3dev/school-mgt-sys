@@ -4,7 +4,7 @@ import { Dashboard } from './components/Dashboard';
 import { LandingPage } from './components/website/LandingPage';
 import { useAuth, useUI, initializeAllStores } from './store';
 import { LoginPage } from './components/auth/LoginPage';
-import Button from './components/ui/button'
+import { Button } from './components/ui/button'
 
 function App() {
   const { isAuthenticated } = useAuth();
