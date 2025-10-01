@@ -13,21 +13,7 @@ import { StudentForm } from '@/components/forms/StudentForm';
 import { formatDate } from '@/lib/utils';
 import { ReportExporter } from '@/components/features/ReportExporter';
 import { CBCReportCard } from '@/components/features/CBCReportCard';
-import { 
-  Search, 
-  Plus, 
-  Eye, 
-  Edit, 
-  FileText, 
-  Users, 
-  Phone,
-  Mail,
-  AlertTriangle,
-  CheckCircle,
-  QrCode,
-  Download,
-  Trash2
-} from 'lucide-react';
+import { Search, Plus, Eye, CreditCard as Edit, FileText, Users, Phone, Mail, AlertTriangle, CheckCircle, QrCode, Download, Trash2 } from 'lucide-react';
 
 export function Students() {
   const [searchTerm, setSearchTerm] = useState('');
