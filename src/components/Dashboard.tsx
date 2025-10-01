@@ -11,7 +11,7 @@ import { Reports } from './pages/Reports';
 import { Privacy } from './pages/Privacy';
 import { Settings } from './pages/Settings';
 import { Staff } from './pages/Staff';
-import { Timetable } from './pages/Timetable';
+// import { Timetable } from './pages/Timetable';
 import { Welfare } from './pages/Welfare';
 import { Communications } from './pages/Communications';
 import { Analytics } from './pages/Analytics';
