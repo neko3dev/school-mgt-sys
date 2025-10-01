@@ -111,11 +111,17 @@ export const useStudents = create<StudentState>((set, get) => ({
   updateRelatedData: (action: string, data: any) => {
     // Update attendance when student is deleted
     if (action === 'student_deleted') {
-      useAttendance.getState().deleteStudentAttendance(data.id)
+      const attendanceStore = useAttendance.getState();
+      if (attendanceStore.deleteStudentAttendance) {
+        attendanceStore.deleteStudentAttendance(data.id);
+      }
     }
     // Update invoices when student is deleted
     if (action === 'student_deleted') {
-      useFinance.getState().deleteStudentInvoices(data.id)
+      const financeStore = useFinance.getState();
+      if (financeStore.deleteStudentInvoices) {
+        financeStore.deleteStudentInvoices(data.id);
+      }
     }
   }
 }))
@@ -294,7 +300,9 @@ export const useAttendance = create<AttendanceState>((set, get) => ({
       const students = useStudents.getState().students
       const student = students.find(s => s.id === record.learner_id)
       if (student && student.guardians?.length > 0) {
-        useCommunications.getState().addMessage({
+        const communicationsStore = useCommunications.getState();
+        if (communicationsStore.addMessage) {
+          communicationsStore.addMessage({
           type: 'sms',
           recipients: student.guardians.map((g: any) => ({
             id: `rec-${Date.now()}`,
@@ -305,7 +313,8 @@ export const useAttendance = create<AttendanceState>((set, get) => ({
           content: `Your child ${student.name} was absent from school today. Please contact the school if this was unplanned.`,
           status: 'draft',
           created_by: 'system'
-        })
+          });
+        }
       }
     }
   },

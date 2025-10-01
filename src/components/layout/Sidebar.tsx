@@ -145,7 +145,7 @@ export function Sidebar({ currentPage, onNavigate }: SidebarProps) {
         </div>
 
         {/* Navigation - Scrollable */}
-        <nav className="flex-1 p-2 lg:p-4 space-y-1 lg:space-y-2 overflow-y-auto scrollbar-hide">
+        <nav className="flex-1 p-2 lg:p-4 space-y-1 lg:space-y-2 overflow-y-auto scrollbar-hide max-h-[calc(100vh-200px)]">
           {roleVisibleItems.map((item) => {
             const Icon = item.icon;
             const isActive = currentPage === item.id;

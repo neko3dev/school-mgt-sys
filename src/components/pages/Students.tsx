@@ -81,6 +81,12 @@ export function Students() {
   const handleSaveStudent = (studentData: any) => {
     if (selectedStudent) {
       updateStudent(selectedStudent.id, studentData);
+      
+      // Update related modules
+      const { updateRelatedData } = useStudents.getState();
+      if (updateRelatedData) {
+        updateRelatedData('student_updated', { id: selectedStudent.id, updates: studentData });
+      }
     } else {
       addStudent(studentData);
     }
