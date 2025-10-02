@@ -64,6 +64,7 @@ export function Sidebar({ currentPage, onNavigate }: SidebarProps) {
     { id: 'reports', label: 'Reports', icon: FileText, badge: null },
     { id: 'analytics', label: 'Analytics', icon: BarChart3, badge: null },
     { id: 'privacy', label: 'DPO Console', icon: Shield, badge: '3' },
+    { id: 'subscription', label: 'Subscription', icon: CreditCard, badge: null },
     { id: 'settings', label: 'Settings', icon: Settings, badge: null },
   ];
 
@@ -72,7 +73,7 @@ export function Sidebar({ currentPage, onNavigate }: SidebarProps) {
       return ['overview', 'students', 'finance', 'attendance', 'transport', 'events', 'reports'].includes(item.id);
     }
     if (user?.role === 'teacher' || user?.role === 'class_teacher') {
-      return !['finance', 'privacy', 'settings', 'staff'].includes(item.id);
+      return !['finance', 'privacy', 'settings', 'staff', 'subscription'].includes(item.id);
     }
     return true; // Admin sees everything
   });
@@ -145,7 +146,7 @@ export function Sidebar({ currentPage, onNavigate }: SidebarProps) {
         </div>
 
         {/* Navigation - Scrollable */}
-        <nav className="flex-1 p-2 lg:p-4 space-y-1 lg:space-y-2 overflow-y-auto scrollbar-hide max-h-[calc(100vh-200px)]">
+        <nav className="flex-1 p-2 lg:p-4 space-y-1 lg:space-y-2 overflow-y-auto scrollbar-hide">
           {roleVisibleItems.map((item) => {
             const Icon = item.icon;
             const isActive = currentPage === item.id;

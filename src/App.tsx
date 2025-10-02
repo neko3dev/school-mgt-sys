@@ -2,19 +2,22 @@ import React from 'react';
 import { BrowserRouter as Router } from 'react-router-dom';
 import { Dashboard } from './components/Dashboard';
 import { LandingPage } from './components/website/LandingPage';
-import { useAuth, useUI, initializeAllStores } from './store';
 import { LoginPage } from './components/auth/LoginPage';
-import { Button } from './components/ui/button'
+import { useAuth } from './hooks/useAuth';
+import { useUI, initializeAllStores } from './store';
+import { Button } from './components/ui/button';
 
 function App() {
-  const { isAuthenticated } = useAuth();
+  const { user, loading, tenant } = useAuth();
   const { theme } = useUI();
   const [showLanding, setShowLanding] = React.useState(true);
 
-  // Initialize all stores with realistic data on app start
+  // Initialize stores with realistic data on app start
   React.useEffect(() => {
-    initializeAllStores();
-  }, []);
+    if (user && tenant) {
+      initializeAllStores();
+    }
+  }, [user, tenant]);
 
   // Apply theme class to document
   React.useEffect(() => {
@@ -29,7 +32,20 @@ function App() {
     setShowLanding(true);
   };
 
-  if (showLanding) {
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading your school...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show landing page for non-authenticated users or when explicitly requested
+  if (showLanding || !user) {
     return (
       <div className="min-h-screen bg-background text-foreground dark-transition">
         <LandingPage onEnterDemo={handleEnterDemo} />
@@ -37,6 +53,16 @@ function App() {
     );
   }
 
+  // Show login page if user is not authenticated but trying to access system
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background text-foreground dark-transition">
+        <LoginPage />
+      </div>
+    );
+  }
+
+  // Show main dashboard for authenticated users
   return (
     <Router>
       <div className="min-h-screen bg-background text-foreground dark-transition">
@@ -52,7 +78,7 @@ function App() {
           </Button>
         </div>
         
-        {isAuthenticated ? <Dashboard /> : <LoginPage />}
+        <Dashboard />
       </div>
     </Router>
   );
