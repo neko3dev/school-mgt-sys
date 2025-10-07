@@ -6,16 +6,26 @@ import { LoginPage } from './components/auth/LoginPage';
 import { useAuth } from './hooks/useAuth';
 import { useUI, initializeAllStores } from './store';
 import { Button } from './components/ui/button';
+import { DataService } from './lib/data-service';
 
 function App() {
   const { user, loading, tenant } = useAuth();
   const { theme } = useUI();
   const [showLanding, setShowLanding] = React.useState(true);
+  const [dataLoading, setDataLoading] = React.useState(false);
 
-  // Initialize stores with realistic data on app start
+  // Load data from database when user is authenticated
   React.useEffect(() => {
     if (user && tenant) {
-      initializeAllStores();
+      const loadData = async () => {
+        setDataLoading(true);
+        const success = await DataService.loadAllData();
+        if (!success) {
+          initializeAllStores();
+        }
+        setDataLoading(false);
+      };
+      loadData();
     }
   }, [user, tenant]);
 
@@ -33,12 +43,14 @@ function App() {
   };
 
   // Show loading state
-  if (loading) {
+  if (loading || dataLoading) {
     return (
       <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading your school...</p>
+          <p className="text-muted-foreground">
+            {loading ? 'Loading your school...' : 'Loading data from database...'}
+          </p>
         </div>
       </div>
     );

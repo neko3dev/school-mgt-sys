@@ -376,6 +376,90 @@ export class DatabaseService {
     return data
   }
 
+  // Transport Routes
+  static async getTransportRoutes() {
+    const tenantId = await this.getCurrentTenantId()
+    if (!tenantId) throw new Error('No tenant access')
+
+    const { data, error } = await supabase
+      .from('transport_routes')
+      .select('*')
+      .eq('tenant_id', tenantId)
+      .order('name')
+
+    if (error) throw error
+    return data
+  }
+
+  static async createTransportRoute(route: any) {
+    const tenantId = await this.getCurrentTenantId()
+    if (!tenantId) throw new Error('No tenant access')
+
+    const { data, error } = await supabase
+      .from('transport_routes')
+      .insert({ ...route, tenant_id: tenantId })
+      .select()
+      .single()
+
+    if (error) throw error
+    return data
+  }
+
+  // Classrooms
+  static async getClassrooms() {
+    const tenantId = await this.getCurrentTenantId()
+    if (!tenantId) throw new Error('No tenant access')
+
+    const { data, error } = await supabase
+      .from('classrooms')
+      .select(`
+        *,
+        teacher:staff(*)
+      `)
+      .eq('tenant_id', tenantId)
+      .order('grade', { ascending: true })
+
+    if (error) throw error
+    return data
+  }
+
+  // Subjects
+  static async getSubjects() {
+    const tenantId = await this.getCurrentTenantId()
+    if (!tenantId) throw new Error('No tenant access')
+
+    const { data, error } = await supabase
+      .from('subjects')
+      .select('*')
+      .eq('tenant_id', tenantId)
+      .order('name')
+
+    if (error) throw error
+    return data
+  }
+
+  // Guardians
+  static async getGuardians(studentId?: string) {
+    const tenantId = await this.getCurrentTenantId()
+    if (!tenantId) throw new Error('No tenant access')
+
+    let query = supabase
+      .from('guardians')
+      .select(`
+        *,
+        student:students(*)
+      `)
+      .eq('tenant_id', tenantId)
+
+    if (studentId) {
+      query = query.eq('student_id', studentId)
+    }
+
+    const { data, error } = await query
+    if (error) throw error
+    return data
+  }
+
   // Audit logging
   static async logAction(action: string, entityType: string, entityId: string, oldValues?: any, newValues?: any) {
     const tenantId = await this.getCurrentTenantId()
