@@ -33,18 +33,24 @@ function AppContent() {
 
   // Load data from database when user is authenticated
   React.useEffect(() => {
-    if (user && tenant) {
+    if (user) {
       const loadData = async () => {
         setDataLoading(true);
-        const success = await DataService.loadAllData();
-        if (!success) {
+        try {
+          const success = await DataService.loadAllData();
+          if (!success) {
+            initializeAllStores();
+          }
+        } catch (err) {
+          console.error('Error loading data:', err);
           initializeAllStores();
+        } finally {
+          setDataLoading(false);
         }
-        setDataLoading(false);
       };
       loadData();
     }
-  }, [user, tenant]);
+  }, [user]);
 
   // Apply theme class to document
   React.useEffect(() => {

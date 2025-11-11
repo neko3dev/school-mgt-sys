@@ -40,7 +40,7 @@ export function useAuth() {
   const loadUserTenant = async (userId: string) => {
     try {
       setLoading(true)
-      
+
       // Get user's tenant relationship
       const { data: tenantUser } = await supabase
         .from('tenant_users')
@@ -50,14 +50,18 @@ export function useAuth() {
         `)
         .eq('user_id', userId)
         .eq('is_active', true)
-        .single()
+        .maybeSingle()
 
       if (tenantUser?.tenant) {
         setTenant(tenantUser.tenant)
-        
+
         // Load subscription info
-        const subscription = await DatabaseService.getSubscription(tenantUser.tenant.id)
-        setSubscription(subscription)
+        try {
+          const subscription = await DatabaseService.getSubscription(tenantUser.tenant.id)
+          setSubscription(subscription)
+        } catch (err) {
+          console.warn('Failed to load subscription:', err)
+        }
       }
     } catch (err) {
       console.error('Error loading tenant:', err)
