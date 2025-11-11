@@ -36,15 +36,25 @@ function AppContent() {
     if (user) {
       const loadData = async () => {
         setDataLoading(true);
+        const timeoutId = setTimeout(() => {
+          console.warn('Data loading timeout - using mock data');
+          initializeAllStores();
+          setDataLoading(false);
+        }, 5000);
+
         try {
-          const success = await DataService.loadAllData();
+          const success = await Promise.race([
+            DataService.loadAllData(),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 5000))
+          ]);
+          clearTimeout(timeoutId);
           if (!success) {
             initializeAllStores();
           }
         } catch (err) {
+          clearTimeout(timeoutId);
           console.error('Error loading data:', err);
           initializeAllStores();
-        } finally {
           setDataLoading(false);
         }
       };
