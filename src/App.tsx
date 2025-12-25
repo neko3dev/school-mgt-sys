@@ -40,14 +40,12 @@ function AppContent() {
         }, 5000);
 
         try {
-          const success = await Promise.race([
+          await Promise.race([
             DataService.loadAllData(),
             new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 5000))
           ]);
           clearTimeout(timeoutId);
-          if (!success) {
-            initializeAllStores();
-          }
+          setDataLoading(false);
         } catch (err) {
           clearTimeout(timeoutId);
           console.error('Error loading data:', err);
