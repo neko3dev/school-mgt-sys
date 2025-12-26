@@ -333,6 +333,48 @@ export const useAttendance = create<AttendanceState>((set, get) => ({
   initializeData: () => set({ attendance: realisticData.attendance })
 }))
 
+// Timetable Store
+interface TimetableState {
+  lessons: any[]
+  selectedLesson: any | null
+  isLoading: boolean
+  error: string | null
+  addLesson: (lesson: any) => void
+  updateLesson: (id: string, updates: any) => void
+  deleteLesson: (id: string) => void
+  setSelectedLesson: (lesson: any) => void
+  setLoading: (loading: boolean) => void
+  setError: (error: string | null) => void
+  initializeData: () => void
+}
+
+export const useTimetable = create<TimetableState>((set) => ({
+  lessons: [],
+  selectedLesson: null,
+  isLoading: false,
+  error: null,
+  addLesson: (lesson) => {
+    const newLesson = {
+      ...lesson,
+      id: `lesson-${Date.now()}`,
+      created_at: new Date().toISOString()
+    }
+    set((state) => ({
+      lessons: [...state.lessons, newLesson]
+    }))
+  },
+  updateLesson: (id, updates) => set((state) => ({
+    lessons: state.lessons.map(l => l.id === id ? { ...l, ...updates } : l)
+  })),
+  deleteLesson: (id) => set((state) => ({
+    lessons: state.lessons.filter(l => l.id !== id)
+  })),
+  setSelectedLesson: (lesson) => set({ selectedLesson: lesson }),
+  setLoading: (loading) => set({ isLoading: loading }),
+  setError: (error) => set({ error }),
+  initializeData: () => set({ lessons: [] })
+}))
+
 // Transport Store
 interface TransportState {
   routes: any[]
@@ -1229,6 +1271,9 @@ export const useSearch = create<SearchState>((set, get) => ({
   }
 }))
 
+// Alias for backwards compatibility
+export const useStudentsData = useStudents
+
 // Initialize all stores with realistic data
 export const initializeAllStores = () => {
   useStudents.getState().initializeData()
@@ -1242,4 +1287,5 @@ export const initializeAllStores = () => {
   useCommunications.getState().initializeData()
   useLibrary.getState().initializeData()
   useInventory.getState().initializeData()
+  useTimetable.getState().initializeData()
 }
