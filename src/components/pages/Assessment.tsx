@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
 import { mockSBATasks, mockAssessmentEvidence, mockOutcomeMaps, mockSubjects, mockClassrooms } from '@/data/mock-data';
-import { useAssessment } from '@/store';
+import { useAssessment, useReports } from '@/store';
 import { TaskForm } from '@/components/forms/TaskForm';
 import { EvidenceForm } from '@/components/forms/EvidenceForm';
 import { GradingInterface } from '@/components/forms/GradingInterface';

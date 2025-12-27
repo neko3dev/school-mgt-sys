@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { mockLearners, mockClassrooms, mockAttendance } from '@/data/mock-data';
 import { ReportExporter } from '@/components/features/ReportExporter';
 import { formatDate, generateId } from '@/lib/utils';
-import { useAttendance } from '@/store';
+import { useAttendance, useReports } from '@/store';
 import { 
   Calendar, 
   Users, 

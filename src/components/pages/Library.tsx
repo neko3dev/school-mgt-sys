@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { mockLearners, mockSubjects } from '@/data/mock-data';
 import { ReportExporter } from '@/components/features/ReportExporter';
 import { formatDate, generateId } from '@/lib/utils';
-import { useLibrary } from '@/store';
+import { useLibrary, useReports } from '@/store';
 import { 
   BookOpen, 
   Search, 

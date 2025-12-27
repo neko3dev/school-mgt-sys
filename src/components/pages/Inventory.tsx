@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Progress } from '@/components/ui/progress';
 import { ReportExporter } from '@/components/features/ReportExporter';
 import { formatDate, formatCurrency, generateId } from '@/lib/utils';
-import { useInventory } from '@/store';
+import { useInventory, useReports } from '@/store';
 import { 
   Package, 
   Search, 

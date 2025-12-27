@@ -13,6 +13,7 @@ import { Progress } from '@/components/ui/progress';
 import { mockTeachers, mockSubjects } from '@/data/mock-data';
 import { ReportExporter } from '@/components/features/ReportExporter';
 import { PerformanceReview } from '@/components/features/PerformanceReview';
+import { useReports } from '@/store';
 import { formatDate, generateId } from '@/lib/utils';
 import { useStaff } from '@/store';
 import { 

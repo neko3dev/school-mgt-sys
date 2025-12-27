@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { mockLearners } from '@/data/mock-data';
 import { formatDate, generateId } from '@/lib/utils';
 import { ReportExporter } from '@/components/features/ReportExporter';
-import { useWelfare } from '@/store';
+import { useWelfare, useReports } from '@/store';
 import { 
   Heart, 
   Shield, 

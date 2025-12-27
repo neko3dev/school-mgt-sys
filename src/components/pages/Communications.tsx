@@ -12,7 +12,7 @@ import { Progress } from '@/components/ui/progress';
 import { mockLearners } from '@/data/mock-data';
 import { formatDate, generateId } from '@/lib/utils';
 import { ReportExporter } from '@/components/features/ReportExporter';
-import { useCommunications } from '@/store';
+import { useCommunications, useReports } from '@/store';
 import { 
   MessageSquare, 
   Mail, 
