@@ -33,7 +33,8 @@ import {
   Trash2,
   Users,
   Bell,
-  Settings
+  Settings,
+  BarChart3
 } from 'lucide-react';
 
 export function Communications() {

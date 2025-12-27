@@ -11,11 +11,12 @@ import { useFinance } from '@/store';
 import { InvoiceForm } from '@/components/forms/InvoiceForm';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { ReportExporter } from '@/components/features/ReportExporter';
-import { 
-  CreditCard, 
-  Plus, 
-  Eye, 
-  Download, 
+import { useReports } from '@/store';
+import {
+  CreditCard,
+  Plus,
+  Eye,
+  Download,
   Send,
   Smartphone,
   Receipt,
@@ -27,7 +28,8 @@ import {
   Users,
   Calendar,
   Edit,
-  Trash2
+  Trash2,
+  FileText
 } from 'lucide-react';
 
 export function Finance() {

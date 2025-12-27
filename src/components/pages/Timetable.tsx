@@ -8,9 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Progress } from '@/components/ui/progress';
 import { mockClassrooms, mockSubjects, mockTeachers } from '@/data/mock-data';
 import { ReportExporter } from '@/components/features/ReportExporter';
-import { useTimetable } from '@/store';
+import { useTimetable, useReports } from '@/store';
 import { 
   Calendar, 
   Clock, 
@@ -29,7 +30,8 @@ import {
   AlertTriangle,
   CheckCircle,
   RefreshCw,
-  BarChart3
+  BarChart3,
+  Progress
 } from 'lucide-react';
 
 export function Timetable() {
@@ -464,24 +466,6 @@ export function Timetable() {
             <FileText className="h-4 w-4 mr-2" />
             Timetable Reports
           </Button>
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button variant="outline">
-                <FileText className="h-4 w-4 mr-2" />
-                Export Timetable
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-3xl">
-              <DialogHeader>
-                <DialogTitle>Export Timetable</DialogTitle>
-              </DialogHeader>
-              <ReportExporter 
-                data={allLessons} 
-                title="School Timetable" 
-                type="attendance"
-              />
-            </DialogContent>
-          </Dialog>
         </div>
       </div>
 
@@ -600,28 +584,10 @@ export function Timetable() {
                     <span>{teacher.name}</span>
                     <div className="flex items-center space-x-2">
                       <Badge variant="outline">{workload} lessons/week</Badge>
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button variant="outline" size="sm">
-                            <Download className="h-4 w-4 mr-1" />
-                            Export Schedule
-                          </Button>
-                        </DialogTrigger>
-                        <Button variant="outline" size="sm" onClick={() => handleExportTeacherSchedule(teacher.id)}>
-                          <FileText className="h-4 w-4 mr-1" />
-                          Generate PDF
-                        </Button>
-                        <DialogContent className="max-w-2xl">
-                          <DialogHeader>
-                            <DialogTitle>Export {teacher.name}'s Schedule</DialogTitle>
-                          </DialogHeader>
-                          <ReportExporter 
-                            data={teacherLessons} 
-                            title={`${teacher.name} Teaching Schedule`} 
-                            type="attendance"
-                          />
-                        </DialogContent>
-                      </Dialog>
+                      <Button variant="outline" size="sm" onClick={() => handleExportTeacherSchedule(teacher.id)}>
+                        <FileText className="h-4 w-4 mr-1" />
+                        Export Schedule
+                      </Button>
                     </div>
                   </CardTitle>
                 </CardHeader>
