@@ -12,13 +12,13 @@ import { Progress } from '@/components/ui/progress';
 import { mockClassrooms, mockSubjects, mockTeachers } from '@/data/mock-data';
 import { ReportExporter } from '@/components/features/ReportExporter';
 import { useTimetable, useReports } from '@/store';
-import { 
-  Calendar, 
-  Clock, 
-  Users, 
+import {
+  Calendar,
+  Clock,
+  Users,
   BookOpen,
-  Plus, 
-  Eye, 
+  Plus,
+  Eye,
   Edit,
   Download,
   Search,
@@ -30,8 +30,7 @@ import {
   AlertTriangle,
   CheckCircle,
   RefreshCw,
-  BarChart3,
-  Progress
+  BarChart3
 } from 'lucide-react';
 
 export function Timetable() {
@@ -746,6 +745,8 @@ const LessonDetailsView = ({ lesson }: { lesson: any }) => {
           <Label>Room</Label>
           <p className="font-medium">{lesson.room}</p>
         </div>
+      </div>
+
       <div className="grid grid-cols-2 gap-4">
         <div>
           <Label>Time</Label>
@@ -755,7 +756,6 @@ const LessonDetailsView = ({ lesson }: { lesson: any }) => {
           <Label>Day</Label>
           <p className="font-medium">{['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'][lesson.day_of_week - 1]}</p>
         </div>
-      </div>
       </div>
       <div className="flex space-x-2">
         <Button className="flex-1">
