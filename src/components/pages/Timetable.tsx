@@ -694,7 +694,7 @@ export function Timetable() {
           <DialogHeader>
             <DialogTitle>Lesson Details</DialogTitle>
           </DialogHeader>
-          <LessonDetailsView lesson={selectedLesson} />
+          {/* <LessonDetailsView lesson={selectedLesson} /> */}
         </DialogContent>
       </Dialog>
 
