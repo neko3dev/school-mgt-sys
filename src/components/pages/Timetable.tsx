@@ -716,57 +716,57 @@ export function Timetable() {
   );
 }
 
-const LessonDetailsView = ({ lesson }: { lesson: any }) => {
-  if (!lesson) return null;
+// const LessonDetailsView = ({ lesson }: { lesson: any }) => {
+//   if (!lesson) return null;
 
-  const subject = mockSubjects.find(s => s.id === lesson.subject_id);
-  const teacher = mockTeachers.find(t => t.id === lesson.teacher_id);
-  const classroom = mockClassrooms.find(c => c.id === lesson.classroom_id);
+//   const subject = mockSubjects.find(s => s.id === lesson.subject_id);
+//   const teacher = mockTeachers.find(t => t.id === lesson.teacher_id);
+//   const classroom = mockClassrooms.find(c => c.id === lesson.classroom_id);
 
-  return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Label>Subject</Label>
-          <p className="font-medium">{subject?.name}</p>
-        </div>
-        <div>
-          <Label>Teacher</Label>
-          <p className="font-medium">{teacher?.name}</p>
-        </div>
-      </div>
+//   return (
+//     <div className="space-y-4">
+//       <div className="grid grid-cols-2 gap-4">
+//         <div>
+//           <Label>Subject</Label>
+//           <p className="font-medium">{subject?.name}</p>
+//         </div>
+//         <div>
+//           <Label>Teacher</Label>
+//           <p className="font-medium">{teacher?.name}</p>
+//         </div>
+//       </div>
       
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Label>Class</Label>
-          <p className="font-medium">Grade {classroom?.grade}{classroom?.stream}</p>
-        </div>
-        <div>
-          <Label>Room</Label>
-          <p className="font-medium">{lesson.room}</p>
-        </div>
-      </div>
+//       <div className="grid grid-cols-2 gap-4">
+//         <div>
+//           <Label>Class</Label>
+//           <p className="font-medium">Grade {classroom?.grade}{classroom?.stream}</p>
+//         </div>
+//         <div>
+//           <Label>Room</Label>
+//           <p className="font-medium">{lesson.room}</p>
+//         </div>
+//       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Label>Time</Label>
-          <p className="font-medium">{lesson.start_time} - {lesson.end_time}</p>
-        </div>
-        <div>
-          <Label>Day</Label>
-          <p className="font-medium">{['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'][lesson.day_of_week - 1]}</p>
-        </div>
-      </div>
-      <div className="flex space-x-2">
-        <Button className="flex-1">
-          <Edit className="h-4 w-4 mr-2" />
-          Edit Lesson
-        </Button>
-        <Button variant="outline" className="flex-1">
-          <Calendar className="h-4 w-4 mr-2" />
-          View Schedule
-        </Button>
-      </div>
-    </div>
-  );
-}
+//       <div className="grid grid-cols-2 gap-4">
+//         <div>
+//           <Label>Time</Label>
+//           <p className="font-medium">{lesson.start_time} - {lesson.end_time}</p>
+//         </div>
+//         <div>
+//           <Label>Day</Label>
+//           <p className="font-medium">{['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'][lesson.day_of_week - 1]}</p>
+//         </div>
+//       </div>
+//       <div className="flex space-x-2">
+//         <Button className="flex-1">
+//           <Edit className="h-4 w-4 mr-2" />
+//           Edit Lesson
+//         </Button>
+//         <Button variant="outline" className="flex-1">
+//           <Calendar className="h-4 w-4 mr-2" />
+//           View Schedule
+//         </Button>
+//       </div>
+//     </div>
+//   );
+// }
