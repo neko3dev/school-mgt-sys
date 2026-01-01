@@ -20,7 +20,8 @@ function AppContent() {
           setDataLoading(true);
           await signIn('demo@karagita-primary.ac.ke', 'Demo@2024');
         } catch (err) {
-          console.error('Demo login failed:', err);
+          console.error('Demo login failed, using mock data:', err);
+          initializeAllStores();
           setDataLoading(false);
         }
       };
